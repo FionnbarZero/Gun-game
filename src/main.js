@@ -778,6 +778,12 @@ loadout.push(
   blueprint({id:'ammo-synthesizer',name:'AMMO SYNTHESIZER',category:'OTHER',weaponClass:'AMMO FABRICATOR',caliber:'SYNTH',trait:'GENERATES AMMO // RADAR BROADCAST',slot:3,kind:'mine',color:0xffc857,price:19000,magSize:2,reserve:3,damage:0,headDamage:0,fireRate:900,reloadTime:2400,effect:'ammoSynth',cooldownDuration:9000}),
 );
 
+// FIRST EXPANSION // movement-first weapons selected from the concept backlog.
+loadout.push(
+  blueprint({id:'glassline-sniper',name:'GLASSLINE SNIPER',category:'PRIMARY',weaponClass:'FRACTURE SNIPER',caliber:'CRYSTAL',trait:'MARK // REPEAT HIT SHATTERS // HEADSHOT BURST',slot:0,kind:'sniper',color:0x8eeeff,price:23800,magSize:5,reserve:30,damage:108,headDamage:238,spread:.00035,fireRate:880,reloadTime:2400,recoil:.3,scoped:true,special:'glassline'}),
+  blueprint({id:'comet-shorty',name:'COMET SHORTY',category:'SECONDARY',weaponClass:'RECOIL SHOTGUN',caliber:'12 GA COMPACT',trait:'TWO SHELLS // RECOIL PROPULSION',slot:1,kind:'shotgun',color:0xff7a45,price:14200,magSize:2,reserve:24,damage:18,headDamage:27,pellets:7,spread:.052,fireRate:520,reloadTime:1550,recoil:.34,special:'cometShorty'})
+);
+
 // Starter utility kit: familiar baseline gear remains available beside the expanded arsenal.
 loadout.push(
   blueprint({ id:'combat-knife', name:'COMBAT KNIFE', category:'GEAR', weaponClass:'MELEE', caliber:'STEEL', trait:'3.2M LUNGE // NO AMMO', kind:'knife', color:0x667172, price:0, magSize:1, reserve:0, damage:92, headDamage:92, spread:0, fireRate:480, reloadTime:0, recoil:.04, silent:true, ammoCost:0, effect:'melee', range:3.2 }),
@@ -829,10 +835,13 @@ const abilityCatalog = {
   grapple:{ name:'GRAPPLE SLINGSHOT', cooldown:7000 },
   camo:{ name:'TEMPORAL PHASE CAMO', cooldown:14000 },
   decoy:{ name:'DECOY PROJECTION', cooldown:18000 },
+  vector:{ name:'VECTOR DASH', cooldown:7000 },
+  ramp:{ name:'HARDLIGHT RAMP', cooldown:15000 },
 };
 const passiveCatalog = {
   aero:{ name:'AERO-STABILIZER', icon:'◇' }, velocity:{ name:'VELOCITY CONVERSION', icon:'⚡' }, shadow:{ name:'SHADOW STEP', icon:'◒' }, apex:{ name:'APEX PREDATOR', icon:'⌖' }, resilience:{ name:'TACTICAL RESILIENCE', icon:'⬡' },
   momentum:{ name:'MOMENTUM CONSERVATION', icon:'↻' }, lightweight:{ name:'LIGHTWEIGHT FRAME', icon:'»' }, rebound:{ name:'REBOUND SHIELD', icon:'◎' },
+  highground:{ name:'HIGH GROUND', icon:'△' }, softlanding:{ name:'SOFT LANDING', icon:'⌄' },
 };
 
 const quickSlotIds = ['specter', 'phantom', 'combat-knife', 'frag-bomb'];
@@ -849,7 +858,7 @@ const defaultSettings = Object.freeze({
 });
 const defaultStats = Object.freeze({
   xp:0, totalCreditsEarned:0, eliminations:0, dummyEliminations:0, hostileEliminations:0,
-  headshots:0, longestShot:0, contractsCompleted:0, deaths:0, weaponUses:{}, abilityUses:{},
+  headshots:0, bestMatchHeadshots:0, longestShot:0, fastestTargetClear:0, exoticRewards:0, contractsCompleted:0, deaths:0, weaponUses:{}, abilityUses:{},
 });
 const localChallenges = [
   { id:'dummies', description:'Eliminate 10 dummies', target:10, reward:300, icon:'⌖' },
@@ -923,6 +932,8 @@ const ui = {
   liveLoadout:document.querySelector('#lobby-live-loadout'), buildSummary:document.querySelector('#lobby-build-summary'), abilitySummary:document.querySelector('#lobby-ability-summary'), passiveSummary:document.querySelector('#lobby-passive-summary'),
   featured:{ panel:document.querySelector('#featured-weapon-panel'), prev:document.querySelector('#featured-prev'), next:document.querySelector('#featured-next'), className:document.querySelector('#featured-class'), name:document.querySelector('#featured-name'), description:document.querySelector('#featured-description'), damage:document.querySelector('#featured-damage'), rate:document.querySelector('#featured-rate'), mag:document.querySelector('#featured-mag'), range:document.querySelector('#featured-range'), price:document.querySelector('#featured-price'), inspect:document.querySelector('#featured-inspect'), buy:document.querySelector('#featured-buy') },
   challengeList:document.querySelector('#challenge-list'), challengeReset:document.querySelector('#challenge-reset'),
+  trophyWall:document.querySelector('#trophy-wall'), mapHologram:document.querySelector('#map-hologram-table'), hologramDiorama:document.querySelector('#hologram-diorama'), hologramMapName:document.querySelector('#hologram-map-name'), hologramMapStyle:document.querySelector('#hologram-map-style'), hologramLandmarks:document.querySelector('#hologram-landmarks'), toggleMapHologram:document.querySelector('#toggle-map-hologram'),
+  rangePanel:document.querySelector('#firing-range-panel'), exitRange:document.querySelector('#exit-firing-range'), rangeDistanceLabel:document.querySelector('#range-distance-label'), rangeDistanceButtons:[...document.querySelectorAll('[data-range-distance]')], rangeMoving:document.querySelector('#range-moving-targets'), rangeReset:document.querySelector('#range-reset-stats'), rangeAccuracy:document.querySelector('#range-accuracy'), rangeEliminations:document.querySelector('#range-eliminations'), rangeClearTime:document.querySelector('#range-clear-time'),
   unboxing:document.querySelector('#unboxing'), unboxSpinner:document.querySelector('#unbox-spinner'), spinnerTrack:document.querySelector('#spinner-track'), unboxReveal:document.querySelector('#unbox-reveal'), rewardCard:document.querySelector('#reward-card'), rewardIcon:document.querySelector('#reward-icon'), rewardName:document.querySelector('#reward-name'), rewardSlot:document.querySelector('#reward-slot'), rewardRarity:document.querySelector('#reward-rarity'), rewardDuplicate:document.querySelector('#reward-duplicate'), rewardParticles:document.querySelector('#reward-particles'), equipReward:document.querySelector('#equip-reward'), closeReward:document.querySelector('#close-reward'),
   abilityOptions:[...document.querySelectorAll('[data-ability]')], passiveOptions:[...document.querySelectorAll('[data-passive]')], abilityDockOptions:[...document.querySelectorAll('[data-ability-dock]')], abilityNames:{q:document.querySelector('#ability-name-q'),e:document.querySelector('#ability-name-e')}, abilityStates:{q:document.querySelector('#ability-state-q'),e:document.querySelector('#ability-state-e')}, abilityCooldowns:{q:document.querySelector('#ability-cooldown-q'),e:document.querySelector('#ability-cooldown-e')}, passiveIndicators:document.querySelector('#passive-indicators'), camoOverlay:document.querySelector('#camo-overlay'),
   modeDisplay: document.querySelector('#mode-display'), modeName: document.querySelector('#mode-name'),
@@ -936,7 +947,7 @@ enemies.forEach(() => { const blip = document.createElement('span'); blip.classN
 
 const state = {
   started: false, locked: false, position: new THREE.Vector3(0, 1.75, 235), velocity: new THREE.Vector3(),
-  yaw: 0, pitch: 0, eyeHeight: 1.75, onGround: true, crouching: false, sliding: false, slideUntil: 0, health: 100, shield: 50, reboundTriggered:false, dead: false, hostileMode: false, activeArena: 0, weaponIndex: quickSlots[0], reloading: false, reloadTimer: null, mouseDown: false, aiming: false, throwPreview:false, lastShot: 0, lastHazardDamage:0, lastDamageAt:0, lastEnemyShotAt:0, lastLaunchAt:0, matchDeaths:0, swapUntil:0, abilityCooldownEnds:{q:0,e:0}, camoUntil:0, grapple:null, rewind:null, velocityBoostUntil:0, lastRampBoost:0, shots: 0, hits: 0, kills: 0, enemyKills: 0, targets: dummies.length, hostiles: enemies.length, nearestLoot: null, nearestWire: null, zipline: null, impulseUntil: 0, speedBoostUntil:0, healRemaining:0, healEnds:0, shake: 0, armoryOpen: false, completed: false, countdownActive:false, countdownTimer:null, matchStart:0, matchDuration:300000, chargingGun:null, chargeStarted:0, saberGuardUntil:0, saberCooldownUntil:0, phaseBeacon:null, revealedUntil:0,
+  yaw: 0, pitch: 0, eyeHeight: 1.75, onGround: true, crouching: false, sliding: false, slideUntil: 0, health: 100, shield: 50, reboundTriggered:false, dead: false, hostileMode: false, firingRange:false, rangeMovingTargets:false, rangeDistance:60, rangeStartedAt:0, rangeKills:0, rangeLastClear:0, airbornePeakY:1.75, matchHeadshots:0, activeArena: 0, weaponIndex: quickSlots[0], reloading: false, reloadTimer: null, mouseDown: false, aiming: false, throwPreview:false, lastShot: 0, lastHazardDamage:0, lastDamageAt:0, lastEnemyShotAt:0, lastLaunchAt:0, matchDeaths:0, swapUntil:0, abilityCooldownEnds:{q:0,e:0}, camoUntil:0, grapple:null, rewind:null, velocityBoostUntil:0, lastRampBoost:0, shots: 0, hits: 0, kills: 0, enemyKills: 0, targets: dummies.length, hostiles: enemies.length, nearestLoot: null, nearestWire: null, zipline: null, impulseUntil: 0, speedBoostUntil:0, healRemaining:0, healEnds:0, shake: 0, armoryOpen: false, completed: false, countdownActive:false, countdownTimer:null, matchStart:0, matchDuration:300000, chargingGun:null, chargeStarted:0, saberGuardUntil:0, saberCooldownUntil:0, phaseBeacon:null, revealedUntil:0,
 };
 let selectedLobbySlot = 0;
 let selectedAbilityDock = 'q';
@@ -961,6 +972,8 @@ const blastEffects = [];
 const gravityWells = [];
 const shockMines = [];
 const activeDecoys = [];
+const hardlightRamps = [];
+const fractureMarks = [];
 const hardlightWalls = [];
 const utilityFields = [];
 const ammoSynths = [];
@@ -988,8 +1001,15 @@ function selectArena(index, announce = true) {
   scene.background.setHex(arena.sky); scene.fog.color.setHex(arena.fog);
   ui.mapOptions.forEach((option, optionIndex) => option.classList.toggle('active', optionIndex === state.activeArena));
   ui.deployMapName.textContent=arena.name;
+  renderMapHologram();
   if (announce && state.started) ui.status.textContent = `DEPLOYED // ${arena.name}`;
 }
+const hologramIntel=[
+  {style:'SYNTHWAVE // VERTICAL CONTROL',landmarks:['NORTH + SOUTH SNIPER SPINES','CENTER SPIRE LAUNCH PAD','SUNKEN NEXUS DATA COVER','UNMAPPED SIGNAL // ENCRYPTED']},
+  {style:'RUINED JUNGLE // STEALTH ROUTES',landmarks:['CANOPY OVERWATCH NESTS','RAVINE SPORE LAUNCHES','FALLEN TITAN SAFE ROUTE','UNMAPPED SIGNAL // UNDER ROOTS']},
+  {style:'MECHANICAL // CHOKE-POINT CONTROL',landmarks:['ASSEMBLY LINE CATWALKS','PISTON CROSSING ROUTE','VENTILATION FLANK','UNMAPPED SIGNAL // SMELTER']},
+];
+function renderMapHologram(){if(!ui.hologramMapName)return;const arena=arenaDefinitions[state.activeArena];const intel=hologramIntel[state.activeArena];ui.hologramMapName.textContent=arena.name;ui.hologramMapStyle.textContent=intel.style;ui.hologramLandmarks.innerHTML=intel.landmarks.map((item,index)=>`<li class="${index===3?'encrypted':''}">${item}</li>`).join('');ui.hologramDiorama.dataset.map=arena.id;}
 function renderMapVote() {
   ui.mapVoteCounts.forEach((label,index)=>{ label.textContent=String(mapVotes[index]); });
   ui.mapVoteTimer.textContent=String(mapVoteSeconds).padStart(2,'0');
@@ -1007,6 +1027,8 @@ function tallyMapVote() {
   mapVoteSeconds=8; renderMapVote();
 }
 ui.mapOptions.forEach(option => option.addEventListener('click', () => castMapVote(Number(option.dataset.map))));
+ui.toggleMapHologram?.addEventListener('click',()=>{ui.mapHologram.classList.toggle('open');ui.toggleMapHologram.classList.toggle('active',ui.mapHologram.classList.contains('open'));uiSound('select');});
+if(ui.hologramDiorama){let dragging=false,lastX=0,rotation=-18;ui.hologramDiorama.addEventListener('pointerdown',event=>{dragging=true;lastX=event.clientX;ui.hologramDiorama.setPointerCapture(event.pointerId);});ui.hologramDiorama.addEventListener('pointermove',event=>{if(!dragging)return;rotation+=(event.clientX-lastX)*.45;lastX=event.clientX;ui.hologramDiorama.style.setProperty('--holo-spin',`${rotation}deg`);});ui.hologramDiorama.addEventListener('pointerup',()=>{dragging=false;});ui.hologramDiorama.addEventListener('pointercancel',()=>{dragging=false;});}
 renderMapVote(); mapVoteInterval=setInterval(tallyMapVote,1000);
 function beginContractCountdown() {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
@@ -1019,11 +1041,30 @@ function beginContractCountdown() {
     ui.countdown.classList.add('hidden'); ui.status.textContent = 'CONTRACT LIVE // FIVE MINUTES';
   }, 1000);
 }
+function configureFiringRange(distance=state.rangeDistance) {
+  state.rangeDistance=distance;const targets=dummies.filter(dummy=>dummy.arena===0);const centerX=arenaDefinitions[0].spawn.x;const startZ=arenaDefinitions[0].spawn.z;
+  targets.forEach((dummy,index)=>{const x=centerX+(index-1)*8;const z=startZ-distance;const y=groundHeightAt(x,z);dummy.rangeBaseX=x;dummy.rangeBaseZ=z;dummy.baseY=y;dummy.group.position.set(x,y,z);dummy.group.rotation.set(0,0,0);dummy.health=100;dummy.alive=true;ui.blips[dummy.index].classList.remove('down');});
+  state.targets=dummies.filter(dummy=>dummy.alive).length;ui.targets.textContent=String(state.targets).padStart(2,'0');ui.rangeDistanceLabel.textContent=`${distance}M`;ui.rangeDistanceButtons.forEach(button=>button.classList.toggle('active',Number(button.dataset.rangeDistance)===distance));
+}
+function resetFiringRangeTest() {
+  state.shots=0;state.hits=0;state.rangeKills=0;state.rangeLastClear=0;state.rangeStartedAt=performance.now();state.matchHeadshots=0;configureFiringRange(state.rangeDistance);
+  for(const slot of quickSlots){const gun=loadout[slot];gun.ammo=gun.magSize;gun.reserve=gun.maxReserve;}updateAmmo();updateFiringRangeHUD();ui.status.textContent='FIRING RANGE // TEST RESET';
+}
+function updateFiringRangeHUD(){if(!state.firingRange)return;ui.rangeAccuracy.textContent=`${Math.round(state.hits/Math.max(1,state.shots)*100)}%`;ui.rangeEliminations.textContent=String(state.rangeKills);ui.rangeClearTime.textContent=state.rangeLastClear?`${(state.rangeLastClear/1000).toFixed(2)}S`:'—';ui.matchClock.textContent='PRACTICE';}
+function enterFiringRange() {
+  if(mapVoteInterval){clearInterval(mapVoteInterval);mapVoteInterval=null;}selectedPlayMode='target';state.firingRange=true;state.completed=false;state.dead=false;state.hostileMode=false;state.matchDeaths=0;state.matchHeadshots=0;state.started=true;selectArena(0,false);equipQuickSlot(0);resetFiringRangeTest();
+  ui.modeName.textContent='PEACEFUL';ui.modeDisplay.classList.remove('hostile');ui.modeDisplay.classList.add('peaceful');ui.menu.classList.add('hidden');ui.hud.classList.remove('hidden');ui.hud.setAttribute('aria-hidden','false');ui.rangePanel.classList.remove('hidden');ui.status.textContent='LOBBY FIRING RANGE // ESC FOR CONTROLS';stopMenuMusic();uiSound('deploy');requestLock();
+}
+function exitFiringRange() {
+  if(!state.firingRange)return;if(state.countdownTimer){clearInterval(state.countdownTimer);state.countdownTimer=null;}progress.stats.bestMatchHeadshots=Math.max(progress.stats.bestMatchHeadshots,state.matchHeadshots);saveProgress();selectedPlayMode='hostile';state.firingRange=false;state.started=false;state.mouseDown=false;state.completed=false;state.dead=false;state.countdownActive=false;state.matchDuration=300000;keys.clear();setAiming(false);document.exitPointerLock();
+  ui.rangePanel.classList.add('hidden');ui.armory.classList.add('hidden');ui.armory.setAttribute('aria-hidden','true');state.armoryOpen=false;ui.hud.classList.add('hidden');ui.hud.setAttribute('aria-hidden','true');ui.prompt.classList.remove('show');ui.death.classList.add('hidden');ui.complete.classList.add('hidden');ui.menu.classList.remove('hidden');mapVoteSeconds=8;renderMapVote();if(!mapVoteInterval)mapVoteInterval=setInterval(tallyMapVote,1000);showLobbyTab('play');renderLobbySummary();renderProfile();lobbyNotify('FIRING RANGE RESULTS SAVED','success');if(progress.settings.musicEnabled)ensureMenuMusic();
+}
 function startDeployment(mode=selectedPlayMode) {
+  if(mode==='target'){enterFiringRange();return;}
   if (mapVoteInterval) { clearInterval(mapVoteInterval); mapVoteInterval=null; }
   selectedPlayMode=mode;
   if(mode==='quick') selectArena(Math.floor(secureRandom()*arenaDefinitions.length),false); else selectArena(state.activeArena,false);
-  state.hostileMode=mode!=='target'; state.matchDeaths=0; state.started=true; equipQuickSlot(0);
+  state.firingRange=false;state.hostileMode=true; state.matchDeaths=0;state.matchHeadshots=0; state.started=true; equipQuickSlot(0);
   ui.modeName.textContent=state.hostileMode?'HOSTILE':'PEACEFUL'; ui.modeDisplay.classList.toggle('hostile',state.hostileMode); ui.modeDisplay.classList.toggle('peaceful',!state.hostileMode);
   ui.menu.classList.add('hidden'); ui.hud.classList.remove('hidden'); beginContractCountdown();
   ui.status.textContent = `${mode==='target'?'TARGET PRACTICE':mode==='quick'?'QUICK CONTRACT':'HOSTILE TRAINING'} // INITIALIZING`; stopMenuMusic(); uiSound('deploy'); requestLock();
@@ -1031,9 +1072,11 @@ function startDeployment(mode=selectedPlayMode) {
 ui.deploy.addEventListener('click',()=>startDeployment());
 ui.playModeButtons.forEach(button=>button.addEventListener('click',()=>startDeployment(button.dataset.playMode)));
 ui.scrollMap?.addEventListener('click',()=>document.querySelector('#map-vote-section')?.scrollIntoView({behavior:progress.settings.reduceMotion?'auto':'smooth',block:'center'}));
+ui.exitRange?.addEventListener('click',exitFiringRange);ui.rangeDistanceButtons.forEach(button=>button.addEventListener('click',()=>{configureFiringRange(Number(button.dataset.rangeDistance));resetFiringRangeTest();}));ui.rangeMoving?.addEventListener('click',()=>{state.rangeMovingTargets=!state.rangeMovingTargets;ui.rangeMoving.textContent=`MOVING TARGETS // ${state.rangeMovingTargets?'ON':'OFF'}`;ui.rangeMoving.classList.toggle('active',state.rangeMovingTargets);});ui.rangeReset?.addEventListener('click',resetFiringRangeTest);
 
 function toggleHostileMode() {
   if (!state.started || state.dead || state.countdownActive) return;
+  if(state.firingRange){ui.status.textContent='FIRING RANGE // HOSTILES DISABLED';return;}
   state.hostileMode = !state.hostileMode;
   ui.modeName.textContent = state.hostileMode ? 'HOSTILE' : 'PEACEFUL';
   ui.modeDisplay.classList.toggle('hostile', state.hostileMode); ui.modeDisplay.classList.toggle('peaceful', !state.hostileMode);
@@ -1080,7 +1123,7 @@ document.addEventListener('keydown', (e) => {
   if (e.code === 'Digit4') equipQuickSlot(3);
   if (e.code === 'KeyB' && !e.repeat) toggleArmory();
   if (e.code === 'KeyF' && !e.repeat) searchNearbyLoot();
-  if (e.code === 'KeyM' && !e.repeat && state.started && !state.dead && !state.armoryOpen) selectArena(state.activeArena + 1);
+  if (e.code === 'KeyM' && !e.repeat && state.started && !state.firingRange && !state.dead && !state.armoryOpen) selectArena(state.activeArena + 1);
   if (e.code === 'KeyH' && !e.repeat) toggleHostileMode();
   if (e.code === 'KeyC' && !e.repeat) beginCrouchOrSlide();
   if (e.code === 'KeyQ' && !e.repeat) useAbility('q');
@@ -1230,13 +1273,37 @@ function activateQuantumRewind(now, slot) {
   ui.status.textContent = 'QUANTUM ANCHOR // PRESS AGAIN WITHIN 5S'; return true;
 }
 
+function activateVectorDash(now) {
+  const direction=new THREE.Vector3();camera.getWorldDirection(direction);direction.normalize();
+  state.velocity.addScaledVector(direction,24);state.velocity.y=Math.max(state.velocity.y,direction.y*24+2);state.onGround=false;state.airbornePeakY=state.position.y;state.impulseUntil=now+620;state.shake=Math.max(state.shake,.07);
+  createPulseBlast(state.position.clone().add(new THREE.Vector3(0,-state.eyeHeight+.2,0)),5,0x50e5ff);ui.status.textContent='VECTOR DASH // MOMENTUM PRESERVED';return true;
+}
+
+function removeHardlightRamp(ramp) {
+  const rampIndex=hardlightRamps.indexOf(ramp);if(rampIndex>=0)hardlightRamps.splice(rampIndex,1);
+  const surfaceIndex=platformSurfaces.indexOf(ramp.surface);if(surfaceIndex>=0)platformSurfaces.splice(surfaceIndex,1);
+  const occluderIndex=occluders.indexOf(ramp.mesh);if(occluderIndex>=0)occluders.splice(occluderIndex,1);
+  world.remove(ramp.mesh);ramp.mesh.geometry.dispose();ramp.mesh.material.dispose();ramp.edges.geometry.dispose();ramp.edges.material.dispose();
+}
+
+function activateHardlightRamp(now) {
+  const forward=new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0),state.yaw).normalize();
+  const length=10;const width=5;const rise=5.5;const center=state.position.clone().addScaledVector(forward,length/2+1.5);const baseHeight=groundHeightAt(center.x,center.z);
+  if(collides(center.x,center.z,baseHeight+1)){ui.status.textContent='HARDLIGHT RAMP // PLACEMENT BLOCKED';return false;}
+  const depth=Math.hypot(length,rise);const material=new THREE.MeshStandardMaterial({color:0x50e5ff,emissive:0x176f9d,emissiveIntensity:.8,transparent:true,opacity:.58,metalness:.22,roughness:.18,side:THREE.DoubleSide});
+  const rampMesh=new THREE.Mesh(new THREE.BoxGeometry(width,.34,depth),material);rampMesh.position.set(center.x,(baseHeight+baseHeight+rise)/2-.12,center.z);rampMesh.rotation.order='YXZ';rampMesh.rotation.y=state.yaw+Math.PI;rampMesh.rotation.x=-Math.atan2(rise,length);rampMesh.userData.arena=state.activeArena;world.add(rampMesh);
+  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(rampMesh.geometry),new THREE.LineBasicMaterial({color:0xe8ffff,transparent:true,opacity:.9}));rampMesh.add(edges);
+  const surface={type:'orientedRamp',x:center.x,z:center.z,w:width,length,angle:state.yaw+Math.PI,startHeight:baseHeight,endHeight:baseHeight+rise};platformSurfaces.push(surface);occluders.push(rampMesh);
+  hardlightRamps.push({mesh:rampMesh,edges,surface,expires:now+8000});createPulseBlast(state.position.clone().add(new THREE.Vector3(0,-state.eyeHeight+.15,0)),4.5,0x50e5ff);ui.status.textContent='HARDLIGHT RAMP // 8 SECONDS';return true;
+}
+
 function useAbility(slot) {
   if (!state.started || state.countdownActive || state.dead || state.completed || state.armoryOpen) return;
   const id = progress.abilities[slot]; const ability = abilityCatalog[id]; const now = performance.now();
   if (state.grapple?.slot === slot) { releaseGrapple('SLINGSHOT RELEASE // MOMENTUM HELD'); return; }
   if (id === 'rewind' && state.rewind?.slot === slot) { activateQuantumRewind(now,slot); refreshAbilityHUD(now); return; }
   if (now < state.abilityCooldownEnds[slot]) { ui.status.textContent = `${ability.name} // ${((state.abilityCooldownEnds[slot]-now)/1000).toFixed(1)}S`; return; }
-  const activated = id === 'kinetic' ? activateGrapple(now,slot,true) : id === 'snapshot' ? activateThermalSnapshot(now) : id === 'nova' ? activateRepulsionNova(now) : id === 'rewind' ? activateQuantumRewind(now,slot) : id === 'grapple' ? activateGrapple(now,slot,false) : id === 'camo' ? activateCamo(now) : activateDecoy(now);
+  const activated = id === 'kinetic' ? activateGrapple(now,slot,true) : id === 'snapshot' ? activateThermalSnapshot(now) : id === 'nova' ? activateRepulsionNova(now) : id === 'rewind' ? activateQuantumRewind(now,slot) : id === 'grapple' ? activateGrapple(now,slot,false) : id === 'camo' ? activateCamo(now) : id === 'vector' ? activateVectorDash(now) : id === 'ramp' ? activateHardlightRamp(now) : activateDecoy(now);
   if (activated) { progress.stats.abilityUses[id]=(progress.stats.abilityUses[id]||0)+1; saveProgress(); }
   if (activated && id !== 'rewind') state.abilityCooldownEnds[slot] = now + ability.cooldown;
   refreshAbilityHUD(now);
@@ -1293,6 +1360,7 @@ function updateAbilitySystems(dt, now) {
     decoy.group.visible = Math.sin(now * .018 + decoy.phase) > -.78;
     if (now >= decoy.expires) removeDecoy(decoy);
   }
+  for(const ramp of [...hardlightRamps]){const remaining=Math.max(0,ramp.expires-now);ramp.mesh.material.opacity=.32+.26*Math.min(1,remaining/1200);ramp.edges.material.opacity=.45+.45*Math.min(1,remaining/1200);if(now>=ramp.expires)removeHardlightRamp(ramp);}
 }
 
 function collides(x, z, height = null) {
@@ -1358,6 +1426,7 @@ function updatePlayer(dt) {
     return;
   }
   const now = performance.now();
+  const wasOnGround=state.onGround;if(!state.onGround)state.airbornePeakY=Math.max(state.airbornePeakY,state.position.y);
   const move = new THREE.Vector3((keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0), 0, (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) - (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0));
   const impulseActive = now < state.impulseUntil;
   const extremeRunning = (keys.has('ShiftLeft') || keys.has('ShiftRight')) && move.lengthSq() > 0;
@@ -1391,7 +1460,7 @@ function updatePlayer(dt) {
     state.velocity.z = THREE.MathUtils.damp(state.velocity.z, 0, state.crouching ? 15 : 11, dt);
   }
   if (keys.has('Space') && state.onGround) {
-    const slideCancel = state.sliding; state.sliding = false; state.velocity.y = 7.2; state.onGround = false;
+    const slideCancel = state.sliding; state.sliding = false; state.velocity.y = 7.2; state.onGround = false;state.airbornePeakY=state.position.y;
     if (slideCancel) { refillActiveSniper('SLIDE-CANCEL REFILL'); triggerVelocityConversion('SLIDE-CANCEL'); recordChallenge('slideCancels'); }
   }
   state.velocity.y -= 18 * dt;
@@ -1401,7 +1470,11 @@ function updatePlayer(dt) {
   if (!collides(state.position.x, nextZ, state.position.y)) state.position.z = nextZ; else state.velocity.z = 0;
   state.position.y += state.velocity.y * dt;
   const floorY = groundHeightAt(state.position.x, state.position.z) + state.eyeHeight;
-  if (state.position.y <= floorY) { state.position.y = floorY; state.velocity.y = 0; state.onGround = true; }
+  if (state.position.y <= floorY) {
+    const landing=!state.onGround||!wasOnGround;const fallDistance=Math.max(0,state.airbornePeakY-floorY);state.position.y=floorY;
+    if(landing&&fallDistance>18){const rawDamage=Math.min(32,(fallDistance-18)*.62);const finalDamage=hasPassive('softlanding')?rawDamage*.28:rawDamage;if(finalDamage>=1)damagePlayer(Math.round(finalDamage));const retention=hasPassive('softlanding')?.96:.78;state.velocity.x*=retention;state.velocity.z*=retention;state.shake=Math.max(state.shake,hasPassive('softlanding')?.025:.085);if(hasPassive('softlanding'))state.impulseUntil=now+450;}
+    state.velocity.y=0;state.onGround=true;state.airbornePeakY=floorY;
+  } else if(state.position.y>floorY+.08&&state.velocity.y<-.1)state.onGround=false;
   if (state.position.y < -12) { damagePlayer(100); return; }
   const inLava=zone => state.position.y <= (zone.maxY ?? 4) && (zone.type==='rect' ? Math.abs(state.position.x-zone.x)<=zone.w/2 && Math.abs(state.position.z-zone.z)<=zone.d/2 : Math.hypot(state.position.x-zone.x,state.position.z-zone.z)<zone.radius);
   if (state.activeArena === 2 && now - state.lastHazardDamage > 500 && lavaHazards.some(inLava)) {
@@ -1417,7 +1490,7 @@ function updatePlayer(dt) {
       const verticalVelocity=Math.sqrt(2*18*(heightDelta+6)); const flight=(verticalVelocity+Math.sqrt(Math.max(0,verticalVelocity*verticalVelocity-36*heightDelta)))/18;
       state.velocity.set(delta.x/Math.max(.8,flight),verticalVelocity,delta.z/Math.max(.8,flight)); state.impulseUntil=now+flight*1000;
     }
-    state.position.y+=.3; state.onGround=false; state.lastLaunchAt=now; pad.cooldown=now+2600;
+    state.position.y+=.3; state.onGround=false; state.airbornePeakY=state.position.y; state.lastLaunchAt=now; pad.cooldown=now+2600;
     ui.status.textContent = `${pad.launchMode==='horizontal'?'PISTON PLATE':'LAUNCH PAD'} // AIRBORNE`;
     refillActiveSniper('LAUNCH PAD REFILL');
     triggerVelocityConversion('LAUNCH PAD');
@@ -1625,6 +1698,10 @@ function fire() {
   gun.model.userData.muzzle.intensity = gun.name === 'SHOTGUN' ? 32 : 20;
   gun.model.userData.flash.material.opacity = 1;
   gun.model.userData.flash.rotation.z = Math.random() * Math.PI;
+  if(gun.special==='cometShorty'){
+    const recoilDirection=new THREE.Vector3();camera.getWorldDirection(recoilDirection);state.velocity.addScaledVector(recoilDirection,-14);state.impulseUntil=now+620;
+    if(recoilDirection.y<-.08){state.onGround=false;state.airbornePeakY=state.position.y;}state.shake=Math.max(state.shake,.13);ui.status.textContent='COMET RECOIL // MOMENTUM ADDED';
+  }
   const activeSlot = quickSlots.indexOf(state.weaponIndex); const cosmetic = activeSlot >= 0 ? cosmeticForSlot(activeSlot) : null;
   if (cosmetic?.trail && !['grenade','medkit','mine','knife'].includes(gun.kind)) {
     const trailDirection = new THREE.Vector3(); camera.getWorldDirection(trailDirection);
@@ -1660,6 +1737,7 @@ function fire() {
     const seen = new Set(); let piercedWall=false;
     for (const hit of pelletHits) {
       if (hit.object.userData.collider) {
+        if(gun.special==='glassline')glasslineSurfaceImpact(hit.point,gun,now);
         if(gun.special==='harmonic'&&!piercedWall&&(gun.chargeScale||0)>.65){piercedWall=true;continue;}
         break;
       }
@@ -1674,6 +1752,7 @@ function fire() {
       if (gun.special === 'stormcoil') damage *= 1 + (gun.sprintCharge || 0) * .8;
       if (gun.special === 'counterbeat' && now-state.lastEnemyShotAt < 850) damage *= 1.65;
       if (gun.special === 'lastWord' && gun.ammo === 0) damage *= 1.8;
+      if(hasPassive('highground')){const elevation=camera.position.y-targetCenter(target).y;if(elevation>=6)damage*=1+THREE.MathUtils.clamp(elevation/90,.035,.09);}
       target.lastShotMeta = { distance:camera.position.distanceTo(hit.point), headshot:isHeadshot, scoped:state.aiming, gun };
       damageByTarget.set(target, gun.effect === 'pierce' ? Math.max(damageByTarget.get(target) || 0, damage) : (damageByTarget.get(target) || 0) + damage);
     }
@@ -1701,7 +1780,36 @@ function pushTarget(target, direction, strength=6) {
   if (!collides(destination.x,destination.z)) target.group.position.copy(destination);
 }
 
+function removeFractureMark(mark) {
+  const index=fractureMarks.indexOf(mark);if(index>=0)fractureMarks.splice(index,1);
+  if(mark.target)mark.target.glasslineMark=null;
+  mark.mesh.parent?.remove(mark.mesh);mark.mesh.geometry.dispose();mark.mesh.material.dispose();
+}
+
+function createFractureMark(point,target=null,expires=performance.now()+5000) {
+  while(fractureMarks.length>=12)removeFractureMark(fractureMarks[0]);
+  const material=new THREE.MeshBasicMaterial({color:0x9ff6ff,wireframe:true,transparent:true,opacity:.9,depthWrite:false});const visual=new THREE.Mesh(new THREE.OctahedronGeometry(target?.kind === 'enemy' ? .34 : .46,1),material);
+  if(target){visual.position.set(0,target.kind==='enemy'?3.1:4.35,.42);target.group.add(visual);}else{visual.position.copy(point);world.add(visual);}
+  const mark={mesh:visual,target,point:point.clone(),expires};fractureMarks.push(mark);if(target)target.glasslineMark=mark;return mark;
+}
+
+function glasslineShatter(point,gun,excludedTarget=null) {
+  createPulseBlast(point,6.5,0x9ff6ff);
+  for(const other of [...dummies,...enemies]){if(!other.alive||other===excludedTarget||other.arena!==state.activeArena)continue;const distance=targetCenter(other).distanceTo(point);if(distance<=6.5){other.lastDamagingGun=gun;damageTarget(other,Math.max(8,Math.round(38*(1-distance/9))));}}
+}
+
+function glasslineSurfaceImpact(point,gun,now) {
+  const existing=fractureMarks.find(mark=>!mark.target&&mark.expires>now&&mark.point.distanceTo(point)<1.4);
+  if(existing){const shatterPoint=existing.point.clone();removeFractureMark(existing);glasslineShatter(shatterPoint,gun);ui.status.textContent='GLASSLINE // SURFACE SHATTER';}
+  else{createFractureMark(point,null,now+5000);ui.status.textContent='GLASSLINE // SURFACE FRACTURED';}
+}
+
 function applyWeaponHitSpecial(gun,target,damage,now=performance.now()) {
+  if(gun.special==='glassline'){
+    const headshot=Boolean(target.lastShotMeta?.headshot);const existing=target.glasslineMark;
+    if(headshot||(existing&&existing.expires>now)){if(existing)removeFractureMark(existing);glasslineShatter(targetCenter(target),gun,target);damage+=headshot?34:52;ui.status.textContent=`GLASSLINE // ${headshot?'HEADSHOT ':''}SHATTER`;}
+    else{createFractureMark(targetCenter(target),target,now+5000);target.pingedUntil=now+1800;ui.status.textContent='GLASSLINE // FRACTURE MARKED';}
+  }
   if (gun.special === 'twinbeat') {
     if (target.twinbeatMarkedUntil > now) { damage += 52; target.twinbeatMarkedUntil=0; ui.status.textContent='TWINBEAT // SECOND BEAT DETONATED'; }
     else { target.twinbeatMarkedUntil=now+4000; target.pingedUntil=now+4000; ui.status.textContent='TWINBEAT // TARGET MARKED'; }
@@ -2137,7 +2245,7 @@ function damageTarget(target, damage) {
   addCash(Math.max(2, Math.round(paidDamage * (target.kind === 'enemy' ? .62 : .45))), target.kind === 'enemy' ? 'HOSTILE HIT' : 'TARGET HIT');
   const shot = target.lastShotMeta; target.lastShotMeta = null;
   target.lastKillMeta = shot;
-  if(shot){progress.stats.longestShot=Math.max(progress.stats.longestShot,shot.distance||0);if(shot.headshot){progress.stats.headshots++;if(shot.scoped)recordChallenge('scopedHeadshots');}}
+  if(shot){progress.stats.longestShot=Math.max(progress.stats.longestShot,shot.distance||0);if(shot.headshot){progress.stats.headshots++;state.matchHeadshots++;if(shot.scoped)recordChallenge('scopedHeadshots');}}
   if (shot?.scoped && shot.distance >= 60) {
     const bonus = shot.headshot ? 140 : 60;
     addCash(bonus, `${shot.headshot ? 'LONG HEADSHOT' : 'LONG SHOT'} // ${Math.round(shot.distance)}M`);
@@ -2169,6 +2277,7 @@ function downDummy(dummy) {
   triggerLastWordReload(dummy);
   triggerApexPredator(dummy);
   progress.stats.eliminations++;progress.stats.dummyEliminations++;recordChallenge('dummies');
+  if(state.firingRange){const clearedAt=performance.now();state.rangeKills++;state.rangeLastClear=clearedAt-state.rangeStartedAt;state.rangeStartedAt=clearedAt;if(!progress.stats.fastestTargetClear||state.rangeLastClear<progress.stats.fastestTargetClear)progress.stats.fastestTargetClear=state.rangeLastClear;updateFiringRangeHUD();}
   if(killShot?.distance>=60)recordChallenge('longKill');if(performance.now()-state.lastLaunchAt<5000)recordChallenge('airKill');
   addCash(90, 'TARGET DOWN');
   const gun = loadout[state.weaponIndex];
@@ -2182,7 +2291,7 @@ function downDummy(dummy) {
 
 function respawnDummy(dummy) {
   const choices = dummySpawns.filter((_, index) => (index < 3 ? 0 : index < 6 ? 1 : 2) === dummy.arena);
-  const point = choices[Math.floor(Math.random() * choices.length)] || dummySpawns[dummy.index];
+  const point = state.firingRange&&dummy.rangeBaseX!=null ? new THREE.Vector3(dummy.rangeBaseX,groundHeightAt(dummy.rangeBaseX,dummy.rangeBaseZ),dummy.rangeBaseZ) : choices[Math.floor(Math.random() * choices.length)] || dummySpawns[dummy.index];
   dummy.group.position.copy(point); dummy.baseY = point.y; dummy.group.rotation.set(0, Math.atan2(state.position.x - point.x, state.position.z - point.z), 0);
   dummy.health = 100; dummy.alive = true; state.targets++;
   ui.targets.textContent = String(state.targets).padStart(2, '0'); ui.blips[dummy.index].classList.remove('down');
@@ -2361,6 +2470,21 @@ function renderProfile() {
   ui.profileCallsign.textContent=callsign.toUpperCase(); ui.profilePanelCallsign.textContent=callsign.toUpperCase(); ui.profileLevel.textContent=String(level).padStart(2,'0'); ui.profileXpBar.style.width=`${levelProgress/10}%`;
   const abilityEntry=Object.entries(progress.stats.abilityUses||{}).sort((a,b)=>b[1]-a[1])[0]; const favorite=favoriteWeaponFromStats();
   ui.profileStats.innerHTML=`<span>EXPERIENCE<b>${progress.stats.xp.toLocaleString()} XP</b></span><span>TOTAL CREDITS EARNED<b>◆${Math.floor(progress.stats.totalCreditsEarned).toLocaleString()}</b></span><span>ELIMINATIONS<b>${progress.stats.eliminations}</b></span><span>HEADSHOTS<b>${progress.stats.headshots}</b></span><span>LONGEST CONFIRMED SHOT<b>${Math.round(progress.stats.longestShot)}M</b></span><span>FAVORITE WEAPON<b>${favorite.name}</b></span><span>CONTRACTS COMPLETED<b>${progress.stats.contractsCompleted}</b></span><span>MOST-USED ABILITY<b>${abilityEntry?abilityCatalog[abilityEntry[0]]?.name||'—':'—'}</b></span>`;
+  renderTrophyWall();
+}
+
+function renderTrophyWall() {
+  if(!ui.trophyWall)return;
+  const rareCount=cosmeticCatalog.filter(item=>progress.cosmetics.has(item.id)&&['rare','legendary','exotic'].includes(item.rarity)).length;
+  const trophies=[
+    {icon:'⌖',name:'LONG SIGHT',value:progress.stats.longestShot?`${Math.round(progress.stats.longestShot)}M`:'LOCKED',unlocked:progress.stats.longestShot>0},
+    {icon:'◉',name:'HEADHUNTER',value:progress.stats.bestMatchHeadshots?`${progress.stats.bestMatchHeadshots} IN ONE MATCH`:'LOCKED',unlocked:progress.stats.bestMatchHeadshots>0},
+    {icon:'⏱',name:'RANGE ZERO',value:progress.stats.fastestTargetClear?`${(progress.stats.fastestTargetClear/1000).toFixed(1)}S CLEAR`:'LOCKED',unlocked:progress.stats.fastestTargetClear>0},
+    {icon:'✦',name:'HOSTILE BREAKER',value:progress.stats.hostileEliminations?`${progress.stats.hostileEliminations} DEFEATED`:'LOCKED',unlocked:progress.stats.hostileEliminations>0},
+    {icon:'◇',name:'VAULT CURATOR',value:rareCount?`${rareCount} RARE+ ITEMS`:'LOCKED',unlocked:rareCount>0},
+    {icon:'◆',name:'EXOTIC SIGNAL',value:progress.stats.exoticRewards?`${progress.stats.exoticRewards} DISCOVERED`:'LOCKED',unlocked:progress.stats.exoticRewards>0},
+  ];
+  ui.trophyWall.innerHTML=trophies.map(trophy=>`<article class="${trophy.unlocked?'unlocked':'locked'}"><i>${trophy.icon}</i><span><small>${trophy.unlocked?'ACHIEVEMENT RECORDED':'UNKNOWN TROPHY'}</small><b>${trophy.name}</b><em>${trophy.value}</em></span></article>`).join('');
 }
 
 function applySettings() {
@@ -2684,6 +2808,7 @@ let pendingReward = null;
 function revealCaseReward(cosmetic) {
   const duplicate = progress.cosmetics.has(cosmetic.id); const rarity = rarityData[cosmetic.rarity];
   progress.cosmetics.add(cosmetic.id);
+  if(!duplicate&&cosmetic.rarity==='exotic')progress.stats.exoticRewards++;
   if (duplicate) { progress.cash += rarity.refund; progress.stats.totalCreditsEarned+=rarity.refund; progress.stats.xp+=rarity.refund; }
   saveProgress(); updateCashUI(); renderLobbyInventory();
   ui.unboxSpinner.classList.add('hidden'); ui.unboxReveal.classList.remove('hidden');
@@ -2818,7 +2943,7 @@ function completeExercise(title = 'RANGE CLEARED') {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
   state.completed = true; state.mouseDown = false; setAiming(false); document.exitPointerLock(); ui.complete.classList.remove('hidden');
   addCash(500, 'CONTRACT COMPLETE');
-  progress.stats.contractsCompleted++; if(state.matchDeaths===0)recordChallenge('survivor'); saveProgress();
+  progress.stats.contractsCompleted++;progress.stats.bestMatchHeadshots=Math.max(progress.stats.bestMatchHeadshots,state.matchHeadshots); if(state.matchDeaths===0)recordChallenge('survivor'); saveProgress();
   ui.completeTitle.innerHTML = title.replace(' ', '<br />');
   ui.accuracy.textContent = `${Math.round((state.hits / Math.max(1, state.shots)) * 100)}%`; ui.rounds.textContent = state.shots;
 }
@@ -2826,6 +2951,7 @@ ui.restart.addEventListener('click', () => location.reload());
 
 function updateContractClock(now) {
   if (!state.started || state.completed) return;
+  if (state.firingRange) { ui.matchClock.textContent='PRACTICE'; ui.clockPanel.classList.remove('danger'); return; }
   if (state.countdownActive) return;
   if (!state.matchStart) return;
   const remaining = Math.max(0, state.matchDuration - (now - state.matchStart));
@@ -2841,6 +2967,7 @@ function updateDummies(time, dt) {
   for (const dummy of dummies) {
     if(dummy.arena!==state.activeArena) continue;
     if (dummy.alive) {
+      if(state.firingRange&&dummy.rangeBaseX!=null){const movingOffset=state.rangeMovingTargets?Math.sin(time*1.8+dummy.phase)*4:0;dummy.group.position.x=THREE.MathUtils.damp(dummy.group.position.x,dummy.rangeBaseX+movingOffset,7,dt);dummy.group.position.z=THREE.MathUtils.damp(dummy.group.position.z,dummy.rangeBaseZ,8,dt);}
       dummy.group.position.y = dummy.baseY + Math.sin(time * 1.4 + dummy.phase) * .035;
       dummy.group.rotation.z = THREE.MathUtils.damp(dummy.group.rotation.z, 0, 5, dt);
     } else {
@@ -3099,6 +3226,7 @@ function updateRegeneratingAmmo(now) {
 
 function updateExperimentalSystems(dt) {
   updateAcousticWaves(dt); updateMagnetLinks(); updateWireTraps(); updateThrownExplosives(dt); updateThrowTrajectory(); updateUtilitySystems(dt);
+  const now=performance.now();for(const mark of [...fractureMarks]){mark.mesh.rotation.x+=dt*2.2;mark.mesh.rotation.y+=dt*3.1;mark.mesh.material.opacity=.55+Math.sin(now*.012)*.32;if(now>=mark.expires||mark.target&&!mark.target.alive)removeFractureMark(mark);}
 }
 
 function updateRadar(now=performance.now()) {
@@ -3141,7 +3269,7 @@ function animate() {
   if (state.mouseDown && state.locked && currentGun.automatic) fire();
   updateArenaEnvironment(time, now, dt); updateDummies(time, dt); updateLootCrates(time);
   if(state.started){updateEnemies(time,dt);updateExperimentalSystems(dt);}
-  if(now-lastUiFrame>=100){lastUiFrame=now;updateContractClock(now);refreshAbilityHUD(now);updateRegeneratingAmmo(now);updateHotbarIndicators(now);updateLootInteraction();updateRadar(now);}
+  if(now-lastUiFrame>=100){lastUiFrame=now;updateContractClock(now);if(state.firingRange)updateFiringRangeHUD();refreshAbilityHUD(now);updateRegeneratingAmmo(now);updateHotbarIndicators(now);updateLootInteraction();updateRadar(now);}
   weapon.rotation.x = THREE.MathUtils.damp(weapon.rotation.x, -.035, 18, dt);
   weapon.rotation.z = THREE.MathUtils.damp(weapon.rotation.z, currentGun.kind === 'pistol' ? .07 : 0, 10, dt);
   if (!state.reloading) weapon.position.y = THREE.MathUtils.damp(weapon.position.y, -.4, 12, dt);
@@ -3162,6 +3290,7 @@ renderLobbySummary();
 renderFeaturedWeapon();
 renderChallenges();
 renderProfile();
+renderMapHologram();
 ui.targets.textContent = String(state.targets).padStart(2, '0');
 ui.enemies.textContent = String(state.hostiles).padStart(2, '0');
 syncArenaVisibility(state.activeArena);

@@ -14,14 +14,16 @@ Damaging targets, landing long-range sniper shots, defeating enemies, and comple
 - 10 role-locked Secondary weapons — one-handed pistols with tracking, chaining, knockback, echo fire, and finisher bonuses
 - 10 role-locked Melee weapons — momentum blades, grappling hooks, shockwave hammers, launch axes, whips, and timed deflection
 - 10 role-locked Other items — pulse discs, bullet barriers, stealth zones, polarity snares, updrafts, decoys, healing clouds, remote charges, return beacons, and ammo fabrication
+- Glassline Sniper — repeat-hit crystalline marks, immediate headshot shatters, and surface fractures that burst through nearby cover
+- Comet Shorty — a two-shell compact shotgun whose recoil can vault the player upward or add forward escape momentum
 
-Scoped weapons use a dedicated precision mode with magnified FOV, reduced look sensitivity, greatly reduced shot spread, and bonus Resonance payouts for hits beyond 60 meters—especially headshots. Several prototype weapons also use specialized systems already active in the arena: piercing beams, explosive splash damage, ricocheting acoustic projectiles, recoil propulsion, magnet links, and wire traps/zip-lines. The expanded arsenal brings the vault to 80 weapon blueprints, plus the starter utility kit.
+Scoped weapons use a dedicated precision mode with magnified FOV, reduced look sensitivity, greatly reduced shot spread, and bonus Resonance payouts for hits beyond 60 meters—especially headshots. Several prototype weapons also use specialized systems already active in the arena: piercing beams, explosive splash damage, ricocheting acoustic projectiles, recoil propulsion, magnet links, and wire traps/zip-lines. The expanded arsenal brings the vault to 82 weapon blueprints, plus the starter utility kit.
 
 The lobby now opens with a full three-card map vote and an eight-second tally. Vertigo Grid has two elevated outer Spines, a Sunken Nexus with five rising data blocks, three tall Spires, rooftop bridges, and vertical launch pads. Overgrown Outpost has a river-cut Ravine, sightline-blocking foliage, covered bunkers, an elevated Canopy network, a hollow covered Fallen Titan ramp, and angled Spore Pads. Industrial Foundry has parallel Assembly Line catwalks, three 15-second crane blockers, horizontal piston launchers, a roofed Ventilation Shaft flank, and a Smelter route with rotating platters that tip players into molten metal. Each map retains a recommended Other-slot utility.
 
-The lobby Build tab lets each operator equip two active abilities on `Q` and `E`, plus up to three passive attunements. New active choices include Kinetic Slingshot, Thermal Snapshot, Repulsion Nova, and Quantum Rewind alongside Grapple Slingshot, Temporal Phase Camo, and Decoy Projection. Passives include Aero-Stabilizer, Velocity Conversion, Shadow Step, Apex Predator, Tactical Resilience, Momentum Conservation, Lightweight Frame, and Rebound Shield. The combat HUD tracks both cooldowns and all equipped perks.
+The lobby Build tab lets each operator equip two active abilities on `Q` and `E`, plus up to three passive attunements. Active choices include Kinetic Slingshot, Thermal Snapshot, Repulsion Nova, Quantum Rewind, Grapple Slingshot, Temporal Phase Camo, Decoy Projection, Vector Dash, and a solid eight-second Hardlight Ramp. Passives include Aero-Stabilizer, Velocity Conversion, Shadow Step, Apex Predator, Tactical Resilience, Momentum Conservation, Lightweight Frame, Rebound Shield, High Ground, and Soft Landing. The combat HUD tracks both cooldowns and all equipped perks.
 
-The Challenges panel rotates three deterministic local contracts at local midnight and tracks their progress without claiming an online backend. The local profile records earned credits, eliminations, headshots, longest confirmed shot, completed contracts, weapon use, and ability use. Settings persist audio levels, mouse and scope sensitivity, FOV, graphics and shadow quality, camera shake, crosshair appearance, damage-number visibility, reduced motion, and the operator callsign in the existing `resonance-engine-progress` save.
+The Play panel includes an interactive tactical map hologram with known sniper, launch, flank, and hazard landmarks. The Lobby Firing Range is a returnable practice session with 25 m, 60 m, and 100 m target distances, optional moving targets, accuracy, eliminations, and fastest-clear timing; leaving it returns directly to the lobby instead of starting a contract. The Challenges panel rotates three deterministic local contracts at local midnight and includes a persistent trophy wall. The local profile records earned credits, eliminations, headshots, longest confirmed shot, fastest range clear, completed contracts, weapon use, and ability use. Settings persist audio levels, mouse and scope sensitivity, FOV, graphics and shadow quality, camera shake, crosshair appearance, damage-number visibility, reduced motion, and the operator callsign in the existing `resonance-engine-progress` save.
 
 ## Run locally
 
@@ -45,7 +47,7 @@ Open the URL shown by Vite and select **Enter the Engine**.
 - `Q` / `E` — activate the two selected character abilities
 - Mouse wheel — cycle the four equipped slots
 - `R` — reload
-- `B` — open the 80-weapon vault
+- `B` — open the 82-weapon vault
 - `F` — search a nearby crate or use a wire zip-line
 - `H` — toggle hostile mode
 - `M` — switch arena
