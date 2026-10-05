@@ -996,6 +996,8 @@ function selectArena(index, announce = true) {
   state.eyeHeight = 1.75; state.crouching = false; state.sliding = false;
   state.position.copy(arena.spawn); state.position.y = groundHeightAt(state.position.x, state.position.z) + state.eyeHeight;
   state.velocity.set(0, 0, 0); state.yaw = 0; state.pitch = 0;
+  state.targets=dummies.filter(dummy=>dummy.arena===state.activeArena&&dummy.alive).length;state.hostiles=enemies.filter(enemy=>enemy.arena===state.activeArena&&enemy.alive).length;
+  ui.targets.textContent=String(state.targets).padStart(2,'0');ui.enemies.textContent=String(state.hostiles).padStart(2,'0');
   ui.arenaName.textContent = arena.name;
   ui.mapUtility.textContent = arena.utility; ui.mapIntel.textContent = arena.intel;
   scene.background.setHex(arena.sky); scene.fog.color.setHex(arena.fog);
@@ -1043,9 +1045,10 @@ function beginContractCountdown() {
 }
 function configureFiringRange(distance=state.rangeDistance) {
   state.rangeDistance=distance;const targets=dummies.filter(dummy=>dummy.arena===0);const centerX=arenaDefinitions[0].spawn.x;const startZ=arenaDefinitions[0].spawn.z;
-  targets.forEach((dummy,index)=>{const x=centerX+(index-1)*8;const z=startZ-distance;const y=groundHeightAt(x,z);dummy.rangeBaseX=x;dummy.rangeBaseZ=z;dummy.baseY=y;dummy.group.position.set(x,y,z);dummy.group.rotation.set(0,0,0);dummy.health=100;dummy.alive=true;ui.blips[dummy.index].classList.remove('down');});
-  state.targets=dummies.filter(dummy=>dummy.alive).length;ui.targets.textContent=String(state.targets).padStart(2,'0');ui.rangeDistanceLabel.textContent=`${distance}M`;ui.rangeDistanceButtons.forEach(button=>button.classList.toggle('active',Number(button.dataset.rangeDistance)===distance));
+  targets.forEach((dummy,index)=>{if(dummy.respawnTimer){clearTimeout(dummy.respawnTimer);dummy.respawnTimer=null;}const x=centerX+(index-1)*8;const z=startZ-distance;const y=groundHeightAt(x,z);dummy.rangeBaseX=x;dummy.rangeBaseZ=z;dummy.baseY=y;dummy.group.position.set(x,y,z);dummy.group.rotation.set(0,0,0);dummy.health=100;dummy.alive=true;ui.blips[dummy.index].classList.remove('down');});
+  state.targets=targets.length;ui.targets.textContent=String(state.targets).padStart(2,'0');ui.rangeDistanceLabel.textContent=`${distance}M`;ui.rangeDistanceButtons.forEach(button=>button.classList.toggle('active',Number(button.dataset.rangeDistance)===distance));
 }
+function restoreFiringRangeTargets(){for(const dummy of dummies.filter(item=>item.arena===0)){if(dummy.respawnTimer){clearTimeout(dummy.respawnTimer);dummy.respawnTimer=null;}const point=dummySpawns[dummy.index];dummy.rangeBaseX=null;dummy.rangeBaseZ=null;dummy.group.position.copy(point);dummy.baseY=point.y;dummy.group.rotation.set(0,0,0);dummy.health=100;dummy.alive=true;ui.blips[dummy.index].classList.remove('down');}state.targets=dummies.filter(dummy=>dummy.arena===state.activeArena&&dummy.alive).length;ui.targets.textContent=String(state.targets).padStart(2,'0');}
 function resetFiringRangeTest() {
   state.shots=0;state.hits=0;state.rangeKills=0;state.rangeLastClear=0;state.rangeStartedAt=performance.now();state.matchHeadshots=0;configureFiringRange(state.rangeDistance);
   for(const slot of quickSlots){const gun=loadout[slot];gun.ammo=gun.magSize;gun.reserve=gun.maxReserve;}updateAmmo();updateFiringRangeHUD();ui.status.textContent='FIRING RANGE // TEST RESET';
@@ -1056,7 +1059,7 @@ function enterFiringRange() {
   ui.modeName.textContent='PEACEFUL';ui.modeDisplay.classList.remove('hostile');ui.modeDisplay.classList.add('peaceful');ui.menu.classList.add('hidden');ui.hud.classList.remove('hidden');ui.hud.setAttribute('aria-hidden','false');ui.rangePanel.classList.remove('hidden');ui.status.textContent='LOBBY FIRING RANGE // ESC FOR CONTROLS';stopMenuMusic();uiSound('deploy');requestLock();
 }
 function exitFiringRange() {
-  if(!state.firingRange)return;if(state.countdownTimer){clearInterval(state.countdownTimer);state.countdownTimer=null;}progress.stats.bestMatchHeadshots=Math.max(progress.stats.bestMatchHeadshots,state.matchHeadshots);saveProgress();selectedPlayMode='hostile';state.firingRange=false;state.started=false;state.mouseDown=false;state.completed=false;state.dead=false;state.countdownActive=false;state.matchDuration=300000;keys.clear();setAiming(false);document.exitPointerLock();
+  if(!state.firingRange)return;if(state.countdownTimer){clearInterval(state.countdownTimer);state.countdownTimer=null;}progress.stats.bestMatchHeadshots=Math.max(progress.stats.bestMatchHeadshots,state.matchHeadshots);saveProgress();restoreFiringRangeTargets();selectedPlayMode='hostile';state.firingRange=false;state.started=false;state.mouseDown=false;state.completed=false;state.dead=false;state.countdownActive=false;state.matchDuration=300000;keys.clear();setAiming(false);document.exitPointerLock();
   ui.rangePanel.classList.add('hidden');ui.armory.classList.add('hidden');ui.armory.setAttribute('aria-hidden','true');state.armoryOpen=false;ui.hud.classList.add('hidden');ui.hud.setAttribute('aria-hidden','true');ui.prompt.classList.remove('show');ui.death.classList.add('hidden');ui.complete.classList.add('hidden');ui.menu.classList.remove('hidden');mapVoteSeconds=8;renderMapVote();if(!mapVoteInterval)mapVoteInterval=setInterval(tallyMapVote,1000);showLobbyTab('play');renderLobbySummary();renderProfile();lobbyNotify('FIRING RANGE RESULTS SAVED','success');if(progress.settings.musicEnabled)ensureMenuMusic();
 }
 function startDeployment(mode=selectedPlayMode) {
@@ -2286,14 +2289,15 @@ function downDummy(dummy) {
   ui.targets.textContent = String(state.targets).padStart(2, '0');
   ui.blips[dummy.index].classList.add('down');
   ui.status.textContent = '+$90 TARGET BONUS // RESUPPLIED';
-  setTimeout(() => respawnDummy(dummy), 2200);
+  dummy.respawnTimer=setTimeout(() => respawnDummy(dummy), 2200);
 }
 
 function respawnDummy(dummy) {
   const choices = dummySpawns.filter((_, index) => (index < 3 ? 0 : index < 6 ? 1 : 2) === dummy.arena);
   const point = state.firingRange&&dummy.rangeBaseX!=null ? new THREE.Vector3(dummy.rangeBaseX,groundHeightAt(dummy.rangeBaseX,dummy.rangeBaseZ),dummy.rangeBaseZ) : choices[Math.floor(Math.random() * choices.length)] || dummySpawns[dummy.index];
   dummy.group.position.copy(point); dummy.baseY = point.y; dummy.group.rotation.set(0, Math.atan2(state.position.x - point.x, state.position.z - point.z), 0);
-  dummy.health = 100; dummy.alive = true; state.targets++;
+  dummy.health = 100; dummy.alive = true;if(dummy.arena===state.activeArena)state.targets++;
+  dummy.respawnTimer=null;
   ui.targets.textContent = String(state.targets).padStart(2, '0'); ui.blips[dummy.index].classList.remove('down');
   ui.status.textContent = 'NEW TARGET DEPLOYED';
 }
@@ -2313,7 +2317,7 @@ function downEnemy(enemy) {
 function respawnEnemy(enemy) {
   const spawn = enemySpawns[enemy.index];
   enemy.group.position.copy(spawn); enemy.group.rotation.set(0, 0, 0); enemy.health = 140; enemy.alive = true; enemy.pingedUntil = 0; enemy.pingShell.visible = false;
-  enemy.nextShot = performance.now() + 1800; enemy.respawnTimer = null; state.hostiles++;
+  enemy.nextShot = performance.now() + 1800; enemy.respawnTimer = null;if(enemy.arena===state.activeArena)state.hostiles++;
   ui.enemies.textContent = String(state.hostiles).padStart(2, '0'); ui.enemyBlips[enemy.index].classList.remove('down');
   ui.status.textContent = 'HOSTILE REINFORCEMENT INBOUND';
 }
@@ -3140,7 +3144,7 @@ function redeployPlayer() {
     enemy.group.position.copy(enemySpawns[index]); enemy.group.rotation.set(0, 0, 0); enemy.health = 140; enemy.alive = true; enemy.pingedUntil = 0; enemy.pingShell.visible = false; enemy.nextShot = performance.now() + 1800 + index * 180;
     ui.enemyBlips[index].classList.remove('down');
   });
-  state.hostiles = enemies.length; ui.enemies.textContent = String(state.hostiles).padStart(2, '0');
+  state.hostiles = enemies.filter(enemy=>enemy.arena===state.activeArena).length; ui.enemies.textContent = String(state.hostiles).padStart(2, '0');
   const gun = loadout[state.weaponIndex]; gun.ammo = gun.magSize; gun.reserve = gun.maxReserve; updateAmmo();
   ui.status.textContent = 'REDEPLOYED // PEACEFUL MODE'; requestLock();
 }
