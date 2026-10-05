@@ -840,6 +840,43 @@ const quickSlots = quickSlotIds.map(id => loadout.findIndex(gun => gun.id === id
 loadout.forEach(item => weapon.add(item.model));
 
 const starterIds = ['specter', 'phantom', 'combat-knife', 'frag-bomb', 'sledge'];
+const defaultSettings = Object.freeze({
+  callsign:'ZERO SIGNAL', masterVolume:.75, musicVolume:.18, effectsVolume:.7,
+  mouseSensitivity:1, scopeSensitivity:.35, fov:72, graphicsQuality:'high',
+  shadowQuality:'high', cameraShake:.75, crosshairColor:'#e7ff57', crosshairSize:1,
+  showDamageNumbers:true, reduceMotion:matchMedia('(prefers-reduced-motion: reduce)').matches,
+  musicEnabled:false,
+});
+const defaultStats = Object.freeze({
+  xp:0, totalCreditsEarned:0, eliminations:0, dummyEliminations:0, hostileEliminations:0,
+  headshots:0, longestShot:0, contractsCompleted:0, deaths:0, weaponUses:{}, abilityUses:{},
+});
+const localChallenges = [
+  { id:'dummies', description:'Eliminate 10 dummies', target:10, reward:300, icon:'⌖' },
+  { id:'scopedHeadshots', description:'Land 5 scoped headshots', target:5, reward:350, icon:'◉' },
+  { id:'slideCancels', description:'Complete 3 slide-cancel jumps', target:3, reward:250, icon:'↯' },
+  { id:'longKill', description:'Get an elimination beyond 60 meters', target:1, reward:400, icon:'⟷' },
+  { id:'airKill', description:'Eliminate a target after using a launch pad', target:1, reward:425, icon:'⇧' },
+  { id:'thermalReveal', description:'Reveal 3 enemies with Thermal Snapshot', target:3, reward:300, icon:'◈' },
+  { id:'novaDeflect', description:'Deflect an explosive with Repulsion Nova', target:1, reward:375, icon:'✺' },
+  { id:'cache', description:'Open one field cache', target:1, reward:250, icon:'◇' },
+  { id:'secondaryKill', description:'Eliminate an enemy using a Secondary weapon', target:1, reward:350, icon:'⌐' },
+  { id:'survivor', description:'Complete a contract without dying', target:1, reward:500, icon:'⬡' },
+];
+function localDateKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function challengeIdsForDate(dateKey) {
+  let seed = [...dateKey].reduce((value,char)=>(value*31+char.charCodeAt(0))>>>0,2166136261);
+  const pool = localChallenges.map(challenge=>challenge.id);
+  for (let index=pool.length-1; index>0; index--) { seed=(seed*1664525+1013904223)>>>0; const swap=seed%(index+1); [pool[index],pool[swap]]=[pool[swap],pool[index]]; }
+  return pool.slice(0,3);
+}
+function normalizedChallengeState(savedState) {
+  const date=localDateKey();
+  if (savedState?.date===date) return { date, progress:{ ...(savedState.progress||{}) }, completed:[...new Set(savedState.completed||[])] };
+  return { date, progress:{}, completed:[] };
+}
 function readProgress() {
   try {
     const saved = JSON.parse(localStorage.getItem('resonance-engine-progress'));
@@ -848,8 +885,17 @@ function readProgress() {
     if (savedE === savedQ) savedE = savedQ === 'snapshot' ? 'nova' : 'snapshot';
     const migratedPassives = Array.isArray(saved?.passives) ? saved.passives : passiveCatalog[saved?.passive] ? [saved.passive] : ['aero','velocity','shadow'];
     const passives = [...new Set(migratedPassives.filter(id => passiveCatalog[id]))].slice(0,3);
-    return { cash: Math.max(0, Number(saved?.cash) || 0), unlocked: new Set([...starterIds, ...(saved?.unlocked || [])]), equipped:saved?.equipped || [], cosmetics:new Set(saved?.cosmetics || []), equippedCosmetics:{ ...(saved?.equippedCosmetics || {}) }, abilities:{ q:savedQ, e:savedE }, passives:passives.length ? passives : ['aero'] };
-  } catch { return { cash: 0, unlocked: new Set(starterIds), equipped:[], cosmetics:new Set(), equippedCosmetics:{}, abilities:{q:'kinetic',e:'snapshot'}, passives:['aero','velocity','shadow'] }; }
+    return {
+      cash:Math.max(0,Number(saved?.cash)||0), unlocked:new Set([...starterIds,...(saved?.unlocked||[])]), equipped:saved?.equipped||[],
+      cosmetics:new Set(saved?.cosmetics||[]), equippedCosmetics:{ ...(saved?.equippedCosmetics||{}) }, abilities:{q:savedQ,e:savedE},
+      passives:passives.length?passives:['aero'], settings:{...defaultSettings,...(saved?.settings||{})},
+      stats:{...defaultStats,...(saved?.stats||{}),weaponUses:{...(saved?.stats?.weaponUses||{})},abilityUses:{...(saved?.stats?.abilityUses||{})}},
+      favoriteWeapon:loadout.some(gun=>gun.id===saved?.favoriteWeapon)?saved.favoriteWeapon:'specter',
+      challengeState:normalizedChallengeState(saved?.challengeState), unopenedCrates:Math.max(0,Number(saved?.unopenedCrates)||0),
+    };
+  } catch {
+    return { cash:0, unlocked:new Set(starterIds), equipped:[], cosmetics:new Set(), equippedCosmetics:{}, abilities:{q:'kinetic',e:'snapshot'}, passives:['aero','velocity','shadow'], settings:{...defaultSettings}, stats:{...defaultStats,weaponUses:{},abilityUses:{}}, favoriteWeapon:'specter', challengeState:normalizedChallengeState(), unopenedCrates:0 };
+  }
 }
 const progress = readProgress();
 progress.equipped.slice(0, 4).forEach((id, slot) => {
@@ -869,6 +915,14 @@ const ui = {
   countdown: document.querySelector('#countdown'), countdownNumber: document.querySelector('#countdown-number'), matchClock: document.querySelector('#match-clock'), clockPanel: document.querySelector('.match-clock'), completeTitle: document.querySelector('#complete-title'),
   arenaName: document.querySelector('#arena-name'), mapOptions: [...document.querySelectorAll('.map-option')], mapVoteCounts:[...document.querySelectorAll('[data-vote-count]')], mapVoteTimer:document.querySelector('#map-vote-timer'), mapUtility:document.querySelector('#map-utility'), mapIntel:document.querySelector('#map-intel'),
   lobbyCash: document.querySelector('#lobby-cash'), lobbyTabs: [...document.querySelectorAll('[data-lobby-tab]')], lobbyPanels: [...document.querySelectorAll('[data-panel]')], shopFilters: [...document.querySelectorAll('[data-shop-filter]')], lobbyShopGrid: document.querySelector('#lobby-shop-grid'), lobbyInventoryGrid: document.querySelector('#lobby-inventory-grid'), lobbyLoadout: document.querySelector('#lobby-loadout'), cosmeticInventory:document.querySelector('#cosmetic-inventory'), caseButtons:[...document.querySelectorAll('[data-buy-case]')], caseOffers:[...document.querySelectorAll('.case-offer')], crateResult: document.querySelector('#crate-result'),
+  profileCallsign:document.querySelector('#profile-callsign'), profileLevel:document.querySelector('#profile-level'), profileXpBar:document.querySelector('#profile-xp-bar'), profilePanelCallsign:document.querySelector('#profile-panel-callsign'), profileStats:document.querySelector('#profile-stats'), editCallsign:document.querySelector('#edit-callsign'),
+  unopenedCrates:document.querySelector('#unopened-crates'), audioToggle:document.querySelector('#audio-toggle'), fullscreenToggle:document.querySelector('#fullscreen-toggle'), settingsShortcut:document.querySelector('#settings-shortcut'), settingsFullscreen:document.querySelector('#settings-fullscreen'), resetSettings:document.querySelector('#reset-settings'), settingsInputs:[...document.querySelectorAll('[data-setting]')],
+  reactor:document.querySelector('#resonance-reactor'), notifications:document.querySelector('#lobby-notifications'), deployMapName:document.querySelector('#deploy-map-name'), loadoutReady:document.querySelector('#loadout-ready'), lobbyModeName:document.querySelector('#lobby-mode-name'),
+  playModeButtons:[...document.querySelectorAll('[data-play-mode]')], scrollMap:document.querySelector('[data-scroll-map]'), openShop:document.querySelector('[data-open-shop]'),
+  heroCanvas:document.querySelector('#lobby-weapon-canvas'), heroFamily:document.querySelector('#hero-family'), heroWeaponName:document.querySelector('#hero-weapon-name'), heroCosmetic:document.querySelector('#hero-cosmetic'), heroScope:document.querySelector('#hero-scope'), heroBarrel:document.querySelector('#hero-barrel'), heroMagazine:document.querySelector('#hero-magazine'), heroTrait:document.querySelector('#hero-trait'), inspectWeapon:document.querySelector('#inspect-weapon'), changeLoadout:document.querySelector('#change-loadout'), randomizePreview:document.querySelector('#randomize-preview'), favoritePreview:document.querySelector('#favorite-preview'),
+  liveLoadout:document.querySelector('#lobby-live-loadout'), buildSummary:document.querySelector('#lobby-build-summary'), abilitySummary:document.querySelector('#lobby-ability-summary'), passiveSummary:document.querySelector('#lobby-passive-summary'),
+  featured:{ panel:document.querySelector('#featured-weapon-panel'), prev:document.querySelector('#featured-prev'), next:document.querySelector('#featured-next'), className:document.querySelector('#featured-class'), name:document.querySelector('#featured-name'), description:document.querySelector('#featured-description'), damage:document.querySelector('#featured-damage'), rate:document.querySelector('#featured-rate'), mag:document.querySelector('#featured-mag'), range:document.querySelector('#featured-range'), price:document.querySelector('#featured-price'), inspect:document.querySelector('#featured-inspect'), buy:document.querySelector('#featured-buy') },
+  challengeList:document.querySelector('#challenge-list'), challengeReset:document.querySelector('#challenge-reset'),
   unboxing:document.querySelector('#unboxing'), unboxSpinner:document.querySelector('#unbox-spinner'), spinnerTrack:document.querySelector('#spinner-track'), unboxReveal:document.querySelector('#unbox-reveal'), rewardCard:document.querySelector('#reward-card'), rewardIcon:document.querySelector('#reward-icon'), rewardName:document.querySelector('#reward-name'), rewardSlot:document.querySelector('#reward-slot'), rewardRarity:document.querySelector('#reward-rarity'), rewardDuplicate:document.querySelector('#reward-duplicate'), rewardParticles:document.querySelector('#reward-particles'), equipReward:document.querySelector('#equip-reward'), closeReward:document.querySelector('#close-reward'),
   abilityOptions:[...document.querySelectorAll('[data-ability]')], passiveOptions:[...document.querySelectorAll('[data-passive]')], abilityDockOptions:[...document.querySelectorAll('[data-ability-dock]')], abilityNames:{q:document.querySelector('#ability-name-q'),e:document.querySelector('#ability-name-e')}, abilityStates:{q:document.querySelector('#ability-state-q'),e:document.querySelector('#ability-state-e')}, abilityCooldowns:{q:document.querySelector('#ability-cooldown-q'),e:document.querySelector('#ability-cooldown-e')}, passiveIndicators:document.querySelector('#passive-indicators'), camoOverlay:document.querySelector('#camo-overlay'),
   modeDisplay: document.querySelector('#mode-display'), modeName: document.querySelector('#mode-name'),
@@ -882,11 +936,13 @@ enemies.forEach(() => { const blip = document.createElement('span'); blip.classN
 
 const state = {
   started: false, locked: false, position: new THREE.Vector3(0, 1.75, 235), velocity: new THREE.Vector3(),
-  yaw: 0, pitch: 0, eyeHeight: 1.75, onGround: true, crouching: false, sliding: false, slideUntil: 0, health: 100, shield: 50, reboundTriggered:false, dead: false, hostileMode: false, activeArena: 0, weaponIndex: quickSlots[0], reloading: false, reloadTimer: null, mouseDown: false, aiming: false, throwPreview:false, lastShot: 0, lastHazardDamage:0, lastDamageAt:0, lastEnemyShotAt:0, swapUntil:0, abilityCooldownEnds:{q:0,e:0}, camoUntil:0, grapple:null, rewind:null, velocityBoostUntil:0, lastRampBoost:0, shots: 0, hits: 0, kills: 0, enemyKills: 0, targets: dummies.length, hostiles: enemies.length, nearestLoot: null, nearestWire: null, zipline: null, impulseUntil: 0, speedBoostUntil:0, healRemaining:0, healEnds:0, shake: 0, armoryOpen: false, completed: false, countdownActive:false, countdownTimer:null, matchStart:0, matchDuration:300000, chargingGun:null, chargeStarted:0, saberGuardUntil:0, saberCooldownUntil:0, phaseBeacon:null, revealedUntil:0,
+  yaw: 0, pitch: 0, eyeHeight: 1.75, onGround: true, crouching: false, sliding: false, slideUntil: 0, health: 100, shield: 50, reboundTriggered:false, dead: false, hostileMode: false, activeArena: 0, weaponIndex: quickSlots[0], reloading: false, reloadTimer: null, mouseDown: false, aiming: false, throwPreview:false, lastShot: 0, lastHazardDamage:0, lastDamageAt:0, lastEnemyShotAt:0, lastLaunchAt:0, matchDeaths:0, swapUntil:0, abilityCooldownEnds:{q:0,e:0}, camoUntil:0, grapple:null, rewind:null, velocityBoostUntil:0, lastRampBoost:0, shots: 0, hits: 0, kills: 0, enemyKills: 0, targets: dummies.length, hostiles: enemies.length, nearestLoot: null, nearestWire: null, zipline: null, impulseUntil: 0, speedBoostUntil:0, healRemaining:0, healEnds:0, shake: 0, armoryOpen: false, completed: false, countdownActive:false, countdownTimer:null, matchStart:0, matchDuration:300000, chargingGun:null, chargeStarted:0, saberGuardUntil:0, saberCooldownUntil:0, phaseBeacon:null, revealedUntil:0,
 };
 let selectedLobbySlot = 0;
 let selectedAbilityDock = 'q';
 let activeShopFilter = 'all';
+let selectedPlayMode = 'hostile';
+let featuredWeaponIndex = Math.max(0, loadout.findIndex(gun=>gun.id==='specter'));
 let crateOpening = false;
 let mapVotes = [3,1,2];
 let playerMapVote = 0;
@@ -931,6 +987,7 @@ function selectArena(index, announce = true) {
   ui.mapUtility.textContent = arena.utility; ui.mapIntel.textContent = arena.intel;
   scene.background.setHex(arena.sky); scene.fog.color.setHex(arena.fog);
   ui.mapOptions.forEach((option, optionIndex) => option.classList.toggle('active', optionIndex === state.activeArena));
+  ui.deployMapName.textContent=arena.name;
   if (announce && state.started) ui.status.textContent = `DEPLOYED // ${arena.name}`;
 }
 function renderMapVote() {
@@ -962,12 +1019,18 @@ function beginContractCountdown() {
     ui.countdown.classList.add('hidden'); ui.status.textContent = 'CONTRACT LIVE // FIVE MINUTES';
   }, 1000);
 }
-ui.deploy.addEventListener('click', () => {
+function startDeployment(mode=selectedPlayMode) {
   if (mapVoteInterval) { clearInterval(mapVoteInterval); mapVoteInterval=null; }
-  selectArena(state.activeArena, false); state.started = true; equipQuickSlot(0);
+  selectedPlayMode=mode;
+  if(mode==='quick') selectArena(Math.floor(secureRandom()*arenaDefinitions.length),false); else selectArena(state.activeArena,false);
+  state.hostileMode=mode!=='target'; state.matchDeaths=0; state.started=true; equipQuickSlot(0);
+  ui.modeName.textContent=state.hostileMode?'HOSTILE':'PEACEFUL'; ui.modeDisplay.classList.toggle('hostile',state.hostileMode); ui.modeDisplay.classList.toggle('peaceful',!state.hostileMode);
   ui.menu.classList.add('hidden'); ui.hud.classList.remove('hidden'); beginContractCountdown();
-  ui.status.textContent = 'CONTRACT INITIALIZING'; requestLock();
-});
+  ui.status.textContent = `${mode==='target'?'TARGET PRACTICE':mode==='quick'?'QUICK CONTRACT':'HOSTILE TRAINING'} // INITIALIZING`; stopMenuMusic(); uiSound('deploy'); requestLock();
+}
+ui.deploy.addEventListener('click',()=>startDeployment());
+ui.playModeButtons.forEach(button=>button.addEventListener('click',()=>startDeployment(button.dataset.playMode)));
+ui.scrollMap?.addEventListener('click',()=>document.querySelector('#map-vote-section')?.scrollIntoView({behavior:progress.settings.reduceMotion?'auto':'smooth',block:'center'}));
 
 function toggleHostileMode() {
   if (!state.started || state.dead || state.countdownActive) return;
@@ -1002,7 +1065,7 @@ document.addEventListener('pointerlockchange', () => {
 });
 document.addEventListener('mousemove', (e) => {
   if (!state.locked) return;
-  const sensitivity = state.aiming ? .00062 : .0018;
+  const sensitivity = .0018 * progress.settings.mouseSensitivity * (state.aiming ? progress.settings.scopeSensitivity : 1);
   state.yaw -= e.movementX * sensitivity;
   state.pitch -= e.movementY * sensitivity * .92;
   state.pitch = THREE.MathUtils.clamp(state.pitch, -1.48, 1.48);
@@ -1026,17 +1089,19 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => keys.delete(e.code));
 function setAiming(active) {
   const gun = loadout[state.weaponIndex];
-  state.aiming = Boolean(active && state.locked && !state.countdownActive && gun.scoped && !state.reloading && !state.armoryOpen);
+  const utility=['grenade','medkit','mine','knife'].includes(gun.kind)||gun.effect==='melee';
+  state.aiming = Boolean(active && state.locked && !state.countdownActive && !utility && !state.reloading && !state.armoryOpen);
   state.throwPreview = Boolean(active && state.locked && !state.countdownActive && gun.kind === 'grenade' && !state.reloading && !state.armoryOpen);
-  ui.scope.classList.toggle('active', state.aiming);
-  ui.crosshair.classList.toggle('scoped', state.aiming);
+  if(active&&state.locked&&(gun.kind==='knife'||gun.effect==='melee')&&performance.now()>=state.saberCooldownUntil){state.saberGuardUntil=performance.now()+520;ui.status.textContent=`${gun.name} // GUARD READY`;}
+  ui.scope.classList.toggle('active', state.aiming && gun.scoped);
+  ui.crosshair.classList.toggle('scoped', state.aiming && gun.scoped); ui.crosshair.classList.toggle('ads',state.aiming&&!gun.scoped);
   trajectoryDots.visible = state.throwPreview || (state.aiming && gun.special === 'ricochet');
-  weapon.visible = !state.aiming;
+  weapon.visible = !(state.aiming && gun.scoped);
 }
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 document.addEventListener('mousedown', (e) => {
-  if (e.button === 0) setAiming(true);
-  if (e.button === 2 && state.locked) {
+  if (e.button === 2) setAiming(true);
+  if (e.button === 0 && state.locked) {
     state.mouseDown = true;
     const gun = loadout[state.weaponIndex];
     if (gun.special === 'harmonic' && !state.reloading && gun.ammo > 0) {
@@ -1045,8 +1110,8 @@ document.addEventListener('mousedown', (e) => {
   }
 });
 document.addEventListener('mouseup', (e) => {
-  if (e.button === 0) setAiming(false);
-  if (e.button === 2) {
+  if (e.button === 2) setAiming(false);
+  if (e.button === 0) {
     state.mouseDown = false;
     if (state.chargingGun) {
       const gun = state.chargingGun; gun.chargeScale = THREE.MathUtils.clamp((performance.now() - state.chargeStarted) / 1250, .18, 1);
@@ -1118,6 +1183,7 @@ function activateThermalSnapshot(now) {
   const pulseEnd = state.position.clone().addScaledVector(forward, 28).add(new THREE.Vector3(0,1.2,0));
   addBeam(camera.position.clone(), pulseEnd, 0xff6b35, 280);
   ui.status.textContent = `THERMAL SNAPSHOT // ${revealed} HOSTILE${revealed === 1 ? '' : 'S'} REVEALED`;
+  if(revealed)recordChallenge('thermalReveal',revealed);
   return true;
 }
 
@@ -1143,7 +1209,7 @@ function activateRepulsionNova(now) {
   }
   const blast = new THREE.Mesh(new THREE.SphereGeometry(1,18,12),new THREE.MeshBasicMaterial({color:0x9b6cff,wireframe:true,transparent:true,opacity:.9}));
   blast.position.copy(state.position).add(new THREE.Vector3(0,-state.eyeHeight+.6,0)); world.add(blast); blastEffects.push({mesh:blast,age:0,radius});
-  ui.status.textContent = `REPULSION NOVA // ${repelled} PUSHED // ${deflected} DEFLECTED`; return true;
+  ui.status.textContent = `REPULSION NOVA // ${repelled} PUSHED // ${deflected} DEFLECTED`; if(deflected)recordChallenge('novaDeflect',deflected); return true;
 }
 
 function removeRewindAnchor() {
@@ -1171,6 +1237,7 @@ function useAbility(slot) {
   if (id === 'rewind' && state.rewind?.slot === slot) { activateQuantumRewind(now,slot); refreshAbilityHUD(now); return; }
   if (now < state.abilityCooldownEnds[slot]) { ui.status.textContent = `${ability.name} // ${((state.abilityCooldownEnds[slot]-now)/1000).toFixed(1)}S`; return; }
   const activated = id === 'kinetic' ? activateGrapple(now,slot,true) : id === 'snapshot' ? activateThermalSnapshot(now) : id === 'nova' ? activateRepulsionNova(now) : id === 'rewind' ? activateQuantumRewind(now,slot) : id === 'grapple' ? activateGrapple(now,slot,false) : id === 'camo' ? activateCamo(now) : activateDecoy(now);
+  if (activated) { progress.stats.abilityUses[id]=(progress.stats.abilityUses[id]||0)+1; saveProgress(); }
   if (activated && id !== 'rewind') state.abilityCooldownEnds[slot] = now + ability.cooldown;
   refreshAbilityHUD(now);
 }
@@ -1325,7 +1392,7 @@ function updatePlayer(dt) {
   }
   if (keys.has('Space') && state.onGround) {
     const slideCancel = state.sliding; state.sliding = false; state.velocity.y = 7.2; state.onGround = false;
-    if (slideCancel) { refillActiveSniper('SLIDE-CANCEL REFILL'); triggerVelocityConversion('SLIDE-CANCEL'); }
+    if (slideCancel) { refillActiveSniper('SLIDE-CANCEL REFILL'); triggerVelocityConversion('SLIDE-CANCEL'); recordChallenge('slideCancels'); }
   }
   state.velocity.y -= 18 * dt;
   const nextX = state.position.x + state.velocity.x * dt;
@@ -1350,7 +1417,7 @@ function updatePlayer(dt) {
       const verticalVelocity=Math.sqrt(2*18*(heightDelta+6)); const flight=(verticalVelocity+Math.sqrt(Math.max(0,verticalVelocity*verticalVelocity-36*heightDelta)))/18;
       state.velocity.set(delta.x/Math.max(.8,flight),verticalVelocity,delta.z/Math.max(.8,flight)); state.impulseUntil=now+flight*1000;
     }
-    state.position.y+=.3; state.onGround=false; pad.cooldown=now+2600;
+    state.position.y+=.3; state.onGround=false; state.lastLaunchAt=now; pad.cooldown=now+2600;
     ui.status.textContent = `${pad.launchMode==='horizontal'?'PISTON PLATE':'LAUNCH PAD'} // AIRBORNE`;
     refillActiveSniper('LAUNCH PAD REFILL');
     triggerVelocityConversion('LAUNCH PAD');
@@ -1360,10 +1427,10 @@ function updatePlayer(dt) {
   const bobAmount = state.sliding ? .006 : state.crouching ? .012 : .032;
   const bob = state.onGround && pace > .3 ? Math.sin(now * .011 * Math.min(pace / 7, 2.4)) * bobAmount : 0;
   camera.position.set(state.position.x, state.position.y + bob, state.position.z);
-  const shake = state.shake;
+  const shake = state.shake * progress.settings.cameraShake;
   camera.rotation.set(state.pitch + (Math.random() - .5) * shake, state.yaw + (Math.random() - .5) * shake, (Math.random() - .5) * shake);
   state.shake = THREE.MathUtils.damp(state.shake, 0, 14, dt);
-  const targetFov = state.aiming ? 20 : state.sliding ? 89 : extremeRunning && pace > 12 ? 85 : 72;
+  const targetFov = state.aiming ? (activeWeapon.scoped?20:Math.max(45,progress.settings.fov-15)) : state.sliding ? Math.min(105,progress.settings.fov+17) : extremeRunning && pace > 12 ? Math.min(102,progress.settings.fov+13) : progress.settings.fov;
   camera.fov = THREE.MathUtils.damp(camera.fov, targetFov, 8, dt);
   if (Math.abs(camera.fov - targetFov) > .01) camera.updateProjectionMatrix();
   const heldGun = loadout[state.weaponIndex];
@@ -1373,13 +1440,30 @@ function updatePlayer(dt) {
 }
 
 let audioContext;
+let menuMusicNodes=[];
+function ensureAudio() { const AudioEngine=globalThis.AudioContext||globalThis.webkitAudioContext; if(!AudioEngine)return null; audioContext||=new AudioEngine(); if(audioContext.state==='suspended')audioContext.resume(); return audioContext; }
+function uiSound(type='select') {
+  const context=ensureAudio(); if(!context||progress.settings.masterVolume<=0||progress.settings.effectsVolume<=0)return;
+  const frequencies={hover:420,select:620,equip:760,purchase:510,error:130,reward:880,deploy:230,back:320}; const now=context.currentTime; const osc=context.createOscillator(); const gain=context.createGain();
+  osc.type=type==='error'?'square':'sine'; osc.frequency.setValueAtTime(frequencies[type]||520,now); osc.frequency.exponentialRampToValueAtTime(Math.max(70,(frequencies[type]||520)*(type==='deploy'?.45:1.3)),now+.08);
+  gain.gain.setValueAtTime(.035*progress.settings.masterVolume*progress.settings.effectsVolume,now); gain.gain.exponentialRampToValueAtTime(.0001,now+.095); osc.connect(gain).connect(context.destination); osc.start(now); osc.stop(now+.1);
+}
+function ensureMenuMusic() {
+  if(!progress.settings.musicEnabled||menuMusicNodes.length||state.started)return;
+  const context=ensureAudio(); if(!context)return; const master=context.createGain(); master.gain.value=.018*progress.settings.masterVolume*progress.settings.musicVolume; master.connect(context.destination);
+  [55,82.41].forEach((frequency,index)=>{const osc=context.createOscillator();osc.type=index?'sine':'triangle';osc.frequency.value=frequency;osc.detune.value=index?7:-4;osc.connect(master);osc.start();menuMusicNodes.push(osc);}); menuMusicNodes.push(master);
+}
+function stopMenuMusic(){menuMusicNodes.forEach(node=>{try{node.stop?.();}catch{}try{node.disconnect?.();}catch{}});menuMusicNodes=[];}
+function toggleMenuMusic(){progress.settings.musicEnabled=!progress.settings.musicEnabled;if(progress.settings.musicEnabled)ensureMenuMusic();else stopMenuMusic();applySettings();saveProgress();uiSound('select');}
 function shotSound(gun) {
-  audioContext ||= new AudioContext();
+  if(progress.settings.masterVolume<=0||progress.settings.effectsVolume<=0)return;
+  ensureAudio(); if(!audioContext)return;
   const now = audioContext.currentTime;
   const osc = audioContext.createOscillator();
   const gain = audioContext.createGain();
   osc.type = gun.silent ? 'sine' : gun.weaponClass.includes('SHOTGUN') || gun.weaponClass === 'BREAK ACTION' ? 'square' : 'sawtooth'; osc.frequency.setValueAtTime(gun.tone, now); osc.frequency.exponentialRampToValueAtTime(35, now + .09);
-  gain.gain.setValueAtTime(gun.silent ? .035 : gun.weaponClass.includes('SHOTGUN') || gun.weaponClass === 'BREAK ACTION' ? .22 : .14, now); gain.gain.exponentialRampToValueAtTime(.001, now + .11);
+  const effectsGain=progress.settings.masterVolume*progress.settings.effectsVolume;
+  gain.gain.setValueAtTime((gun.silent ? .035 : gun.weaponClass.includes('SHOTGUN') || gun.weaponClass === 'BREAK ACTION' ? .22 : .14)*effectsGain, now); gain.gain.exponentialRampToValueAtTime(.001, now + .11);
   osc.connect(gain).connect(audioContext.destination); osc.start(now); osc.stop(now + .12);
 }
 
@@ -1535,7 +1619,7 @@ function fire() {
   if (gun.effect === 'heal' && state.health >= 100) { ui.status.textContent = 'HEALTH ALREADY FULL'; return; }
   const ammoCost = gun.ammoCost ?? 1;
   if (gun.ammo < ammoCost) { reload(); return; }
-  state.lastShot = now; gun.ammo -= ammoCost; state.shots++; updateAmmo(); shotSound(gun);
+  state.lastShot = now; gun.ammo -= ammoCost; state.shots++; progress.stats.weaponUses[gun.id]=(progress.stats.weaponUses[gun.id]||0)+1; updateAmmo(); shotSound(gun);
   if (gun.cooldownDuration) { gun.cooldownEnds = now + gun.cooldownDuration; updateHotbarIndicators(now); }
   weapon.rotation.x = -.035 - gun.recoil;
   gun.model.userData.muzzle.intensity = gun.name === 'SHOTGUN' ? 32 : 20;
@@ -2053,6 +2137,7 @@ function damageTarget(target, damage) {
   addCash(Math.max(2, Math.round(paidDamage * (target.kind === 'enemy' ? .62 : .45))), target.kind === 'enemy' ? 'HOSTILE HIT' : 'TARGET HIT');
   const shot = target.lastShotMeta; target.lastShotMeta = null;
   target.lastKillMeta = shot;
+  if(shot){progress.stats.longestShot=Math.max(progress.stats.longestShot,shot.distance||0);if(shot.headshot){progress.stats.headshots++;if(shot.scoped)recordChallenge('scopedHeadshots');}}
   if (shot?.scoped && shot.distance >= 60) {
     const bonus = shot.headshot ? 140 : 60;
     addCash(bonus, `${shot.headshot ? 'LONG HEADSHOT' : 'LONG SHOT'} // ${Math.round(shot.distance)}M`);
@@ -2080,8 +2165,11 @@ function triggerApexPredator(target) {
 
 function downDummy(dummy) {
   dummy.alive = false; state.targets--; state.kills++;
+  const killShot=dummy.lastKillMeta;
   triggerLastWordReload(dummy);
   triggerApexPredator(dummy);
+  progress.stats.eliminations++;progress.stats.dummyEliminations++;recordChallenge('dummies');
+  if(killShot?.distance>=60)recordChallenge('longKill');if(performance.now()-state.lastLaunchAt<5000)recordChallenge('airKill');
   addCash(90, 'TARGET DOWN');
   const gun = loadout[state.weaponIndex];
   gun.reserve = Math.min(gun.maxReserve, gun.reserve + gun.magSize);
@@ -2103,8 +2191,10 @@ function respawnDummy(dummy) {
 
 function downEnemy(enemy) {
   enemy.alive = false; state.hostiles--; state.kills++; state.enemyKills++;
+  const killShot=enemy.lastKillMeta;
   triggerLastWordReload(enemy);
   triggerApexPredator(enemy);
+  progress.stats.eliminations++;progress.stats.hostileEliminations++;if(killShot?.distance>=60)recordChallenge('longKill');if(performance.now()-state.lastLaunchAt<5000)recordChallenge('airKill');if(slotForGun(killShot?.gun||loadout[state.weaponIndex])===1)recordChallenge('secondaryKill');
   addCash(125, 'HOSTILE DOWN');
   ui.enemies.textContent = String(state.hostiles).padStart(2, '0'); ui.enemyBlips[enemy.index].classList.add('down');
   ui.status.textContent = '+$125 HOSTILE ELIMINATED';
@@ -2205,7 +2295,96 @@ function updateVitals() {
 }
 
 function saveProgress() {
-  try { localStorage.setItem('resonance-engine-progress', JSON.stringify({ cash: progress.cash, unlocked: [...progress.unlocked], equipped:quickSlots.map(index => loadout[index].id), cosmetics:[...progress.cosmetics], equippedCosmetics:progress.equippedCosmetics, abilities:progress.abilities, passives:progress.passives })); } catch { /* Progress still works for this session. */ }
+  try {
+    localStorage.setItem('resonance-engine-progress', JSON.stringify({
+      cash:progress.cash, unlocked:[...progress.unlocked], equipped:quickSlots.map(index=>loadout[index].id), cosmetics:[...progress.cosmetics],
+      equippedCosmetics:progress.equippedCosmetics, abilities:progress.abilities, passives:progress.passives, settings:progress.settings,
+      stats:progress.stats, favoriteWeapon:progress.favoriteWeapon, challengeState:progress.challengeState, unopenedCrates:progress.unopenedCrates,
+    }));
+  } catch { /* Progress still works for this session. */ }
+}
+
+function lobbyNotify(message,type='info') {
+  if (!ui.notifications) return;
+  const notification=document.createElement('div'); notification.className=`lobby-notice ${type}`;
+  notification.textContent=message; ui.notifications.append(notification);
+  setTimeout(()=>{ notification.classList.add('out'); setTimeout(()=>notification.remove(),260); },3200);
+}
+
+function pulseReactor(stateName,duration=720) {
+  if (!ui.reactor) return;
+  ui.reactor.classList.remove('error','reward','success'); void ui.reactor.offsetWidth; ui.reactor.classList.add(stateName);
+  clearTimeout(pulseReactor.timer); pulseReactor.timer=setTimeout(()=>ui.reactor?.classList.remove(stateName),duration);
+}
+
+function animateNumber(element,toValue) {
+  if (!element) return;
+  const fromValue=Number(element.dataset.value??toValue); const target=Math.floor(toValue); element.dataset.value=String(target);
+  if (progress.settings.reduceMotion || fromValue===target) { element.textContent=String(target).padStart(4,'0'); return; }
+  const started=performance.now();
+  const frame=now=>{ const t=Math.min(1,(now-started)/430); const eased=1-Math.pow(1-t,3); element.textContent=String(Math.round(THREE.MathUtils.lerp(fromValue,target,eased))).padStart(4,'0'); if(t<1) requestAnimationFrame(frame); };
+  requestAnimationFrame(frame);
+}
+
+function recordChallenge(id,amount=1) {
+  const challenge=localChallenges.find(item=>item.id===id); const activeIds=challengeIdsForDate(progress.challengeState.date);
+  if (!challenge || !activeIds.includes(id) || progress.challengeState.completed.includes(id)) return;
+  progress.challengeState.progress[id]=Math.min(challenge.target,(Number(progress.challengeState.progress[id])||0)+amount);
+  if (progress.challengeState.progress[id]>=challenge.target) {
+    progress.challengeState.completed.push(id); progress.cash+=challenge.reward; progress.stats.totalCreditsEarned+=challenge.reward; progress.stats.xp+=challenge.reward;
+    progress.stats.contractsCompleted++; lobbyNotify(`CONTRACT COMPLETE // +◆${challenge.reward}`,'success'); pulseReactor('success',1050);
+  }
+  saveProgress(); updateCashUI(); renderChallenges(); renderProfile();
+}
+
+function renderChallenges() {
+  if (!ui.challengeList) return;
+  if (progress.challengeState.date!==localDateKey()) progress.challengeState=normalizedChallengeState();
+  ui.challengeList.replaceChildren();
+  challengeIdsForDate(progress.challengeState.date).forEach(id=>{
+    const challenge=localChallenges.find(item=>item.id===id); const value=Math.min(challenge.target,Number(progress.challengeState.progress[id])||0); const complete=progress.challengeState.completed.includes(id);
+    const card=document.createElement('article'); card.className=`challenge-card ${complete?'complete':''}`;
+    card.innerHTML=`<i>${challenge.icon}</i><div><small>${complete?'CONTRACT COMPLETE':'LOCAL DAILY CONTRACT'}</small><h3>${challenge.description}</h3><span><b style="width:${value/challenge.target*100}%"></b></span><em>${value} / ${challenge.target}</em></div><strong>+◆${challenge.reward}</strong>`;
+    ui.challengeList.append(card);
+  });
+  const tomorrow=new Date(); tomorrow.setHours(24,0,0,0); const remaining=Math.max(0,tomorrow-Date.now());
+  if (ui.challengeReset) ui.challengeReset.textContent=`RESET // ${Math.floor(remaining/3600000)}H ${Math.floor(remaining/60000)%60}M`;
+}
+
+function favoriteWeaponFromStats() {
+  const entries=Object.entries(progress.stats.weaponUses||{}).sort((a,b)=>b[1]-a[1]);
+  return loadout.find(gun=>gun.id===(entries[0]?.[0]||progress.favoriteWeapon))||loadout[quickSlots[0]];
+}
+
+function renderProfile() {
+  const level=Math.floor(progress.stats.xp/1000)+1; const levelProgress=progress.stats.xp%1000; const callsign=String(progress.settings.callsign||defaultSettings.callsign).trim().slice(0,18)||defaultSettings.callsign;
+  ui.profileCallsign.textContent=callsign.toUpperCase(); ui.profilePanelCallsign.textContent=callsign.toUpperCase(); ui.profileLevel.textContent=String(level).padStart(2,'0'); ui.profileXpBar.style.width=`${levelProgress/10}%`;
+  const abilityEntry=Object.entries(progress.stats.abilityUses||{}).sort((a,b)=>b[1]-a[1])[0]; const favorite=favoriteWeaponFromStats();
+  ui.profileStats.innerHTML=`<span>EXPERIENCE<b>${progress.stats.xp.toLocaleString()} XP</b></span><span>TOTAL CREDITS EARNED<b>◆${Math.floor(progress.stats.totalCreditsEarned).toLocaleString()}</b></span><span>ELIMINATIONS<b>${progress.stats.eliminations}</b></span><span>HEADSHOTS<b>${progress.stats.headshots}</b></span><span>LONGEST CONFIRMED SHOT<b>${Math.round(progress.stats.longestShot)}M</b></span><span>FAVORITE WEAPON<b>${favorite.name}</b></span><span>CONTRACTS COMPLETED<b>${progress.stats.contractsCompleted}</b></span><span>MOST-USED ABILITY<b>${abilityEntry?abilityCatalog[abilityEntry[0]]?.name||'—':'—'}</b></span>`;
+}
+
+function applySettings() {
+  const settings=progress.settings;
+  document.body.classList.toggle('reduce-motion',Boolean(settings.reduceMotion));
+  document.body.classList.toggle('damage-numbers-off',!settings.showDamageNumbers);
+  document.documentElement.style.setProperty('--crosshair-color',settings.crosshairColor);
+  document.documentElement.style.setProperty('--crosshair-size',String(settings.crosshairSize));
+  renderer.shadowMap.enabled=settings.shadowQuality!=='off';
+  const shadowSize=settings.shadowQuality==='high'?1024:512; sun.shadow.mapSize.set(shadowSize,shadowSize); renderer.shadowMap.needsUpdate=true;
+  const qualityCap=configuredPixelRatioMaximum(); if(renderPixelRatio>qualityCap||settings.graphicsQuality==='high'){renderPixelRatio=qualityCap;renderer.setPixelRatio(renderPixelRatio);renderer.setSize(innerWidth,innerHeight);}
+  ui.settingsInputs.forEach(input=>{ const value=settings[input.dataset.setting]; if(input.type==='checkbox') input.checked=Boolean(value); else input.value=String(value); });
+  ui.audioToggle.classList.toggle('active',Boolean(settings.musicEnabled)); ui.audioToggle.setAttribute('aria-pressed',String(Boolean(settings.musicEnabled)));
+  renderProfile();
+}
+
+function configuredPixelRatioMaximum() {
+  const cap=progress.settings.graphicsQuality==='low'?.78:progress.settings.graphicsQuality==='medium'?1:maximumPixelRatio;
+  return Math.min(maximumPixelRatio,cap);
+}
+
+async function toggleFullscreen() {
+  try { if(document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
+  catch { lobbyNotify('FULLSCREEN IS NOT AVAILABLE IN THIS BROWSER','warning'); pulseReactor('error'); }
 }
 
 function cosmeticForSlot(slot) {
@@ -2235,14 +2414,97 @@ function equipCosmetic(cosmetic) {
   if (!cosmetic || !progress.cosmetics.has(cosmetic.id)) return;
   progress.equippedCosmetics[cosmetic.slot] = cosmetic.id; applyCosmeticToSlot(cosmetic.slot); saveProgress();
   announceCrate(`${cosmetic.name} // EQUIPPED TO ${['PRIMARY','SECONDARY','MELEE','OTHER'][cosmetic.slot]}`);
-  renderLobbyInventory();
+  lobbyNotify(`COSMETIC EQUIPPED // ${cosmetic.name}`,cosmetic.rarity==='common'?'success':cosmetic.rarity); uiSound('equip'); renderLobbyInventory(); renderLobbySummary();
 }
 
 function updateCashUI() {
   const value = Math.floor(progress.cash).toString().padStart(4, '0');
-  ui.cash.textContent = value; ui.armoryCash.textContent = value; ui.lobbyCash.textContent = value;
+  ui.cash.textContent = value; ui.armoryCash.textContent = value; animateNumber(ui.lobbyCash,progress.cash);
   ui.caseButtons.forEach(button => { button.disabled = crateOpening || progress.cash < Number(button.dataset.cost); });
+  if (ui.featured?.buy) renderFeaturedWeapon();
 }
+
+const slotNames=['PRIMARY','SECONDARY','MELEE','OTHER'];
+const slotIcons=['⌖','⌐','†','◇'];
+let lobbyPreview=null;
+let lobbyPreviewWeaponIndex=quickSlots[0];
+
+function initLobbyPreview() {
+  if (!ui.heroCanvas || lobbyPreview) return;
+  const previewRenderer=new THREE.WebGLRenderer({canvas:ui.heroCanvas,alpha:true,antialias:true,powerPreference:'high-performance'});
+  previewRenderer.setClearColor(0x000000,0); previewRenderer.outputColorSpace=THREE.SRGBColorSpace; previewRenderer.toneMapping=THREE.ACESFilmicToneMapping; previewRenderer.toneMappingExposure=1.35;
+  const previewScene=new THREE.Scene(); const previewCamera=new THREE.PerspectiveCamera(34,2,0.01,60); previewCamera.position.set(0,.35,5); previewCamera.lookAt(0,0,0);
+  previewScene.add(new THREE.HemisphereLight(0xc9f7ff,0x26113e,2.8));
+  const key=new THREE.DirectionalLight(0x65eaff,5); key.position.set(3,4,5); previewScene.add(key);
+  const rim=new THREE.PointLight(0xff4fba,25,12); rim.position.set(-3,1,-2); previewScene.add(rim);
+  const group=new THREE.Group(); previewScene.add(group);
+  const platformMaterial=new THREE.MeshBasicMaterial({color:0x50e5ff,transparent:true,opacity:.7});
+  const platform=new THREE.Mesh(new THREE.TorusGeometry(1.6,.018,8,64),platformMaterial); platform.rotation.x=Math.PI/2; platform.position.y=-1.05; previewScene.add(platform);
+  const positions=new Float32Array(72*3); for(let i=0;i<72;i++){const radius=1.3+Math.random()*1.5;positions[i*3]=Math.cos(i*.79)*radius;positions[i*3+1]=-1+Math.random()*2.4;positions[i*3+2]=(Math.random()-.5)*2.4;}
+  const particlesGeometry=new THREE.BufferGeometry(); particlesGeometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
+  const particlesMaterial=new THREE.PointsMaterial({color:0x50e5ff,size:.028,transparent:true,opacity:.72,depthWrite:false}); const particles=new THREE.Points(particlesGeometry,particlesMaterial); previewScene.add(particles);
+  lobbyPreview={renderer:previewRenderer,scene:previewScene,camera:previewCamera,group,platform,particles,yaw:-.55,pitch:-.08,zoom:5,dragging:false,lastX:0,lastY:0,weapon:null};
+  const canvas=ui.heroCanvas;
+  canvas.addEventListener('pointerdown',event=>{lobbyPreview.dragging=true;lobbyPreview.lastX=event.clientX;lobbyPreview.lastY=event.clientY;canvas.setPointerCapture(event.pointerId);});
+  canvas.addEventListener('pointermove',event=>{if(!lobbyPreview.dragging)return;lobbyPreview.yaw+=(event.clientX-lobbyPreview.lastX)*.009;lobbyPreview.pitch=THREE.MathUtils.clamp(lobbyPreview.pitch+(event.clientY-lobbyPreview.lastY)*.006,-.55,.55);lobbyPreview.lastX=event.clientX;lobbyPreview.lastY=event.clientY;});
+  canvas.addEventListener('pointerup',event=>{lobbyPreview.dragging=false;canvas.releasePointerCapture(event.pointerId);});
+  canvas.addEventListener('pointercancel',()=>{lobbyPreview.dragging=false;});
+  canvas.addEventListener('wheel',event=>{event.preventDefault();lobbyPreview.zoom=THREE.MathUtils.clamp(lobbyPreview.zoom+event.deltaY*.003,3.6,7);},{passive:false});
+  setLobbyPreviewWeapon(quickSlots[0]);
+}
+
+function setLobbyPreviewWeapon(index) {
+  if (!loadout[index]) return;
+  lobbyPreviewWeaponIndex=index;
+  const gun=loadout[index]; const cosmeticSlot=quickSlots.indexOf(index); const cosmetic=cosmeticSlot>=0?cosmeticForSlot(cosmeticSlot):null;
+  if (lobbyPreview) {
+    lobbyPreview.group.clear();
+    const clone=gun.model.clone(true); clone.traverse(child=>{if(child.isMesh&&child.material?.clone)child.material=child.material.clone();if(child.isLight)child.intensity=Math.min(child.intensity,.4);});
+    clone.updateMatrixWorld(true); const box=new THREE.Box3().setFromObject(clone); const center=box.getCenter(new THREE.Vector3()); const size=box.getSize(new THREE.Vector3()); clone.position.sub(center); clone.scale.setScalar(3.15/Math.max(size.x,size.y,size.z,1));
+    lobbyPreview.group.add(clone); lobbyPreview.weapon=clone; const previewColor=cosmetic?.trail||cosmetic?.emissive||cosmetic?.color||gun.color||0x50e5ff;
+    lobbyPreview.platform.material.color.setHex(previewColor); lobbyPreview.particles.material.color.setHex(previewColor);
+  }
+  const equipped=quickSlots[0]===index;
+  ui.heroFamily.textContent=`${equipped?'EQUIPPED PRIMARY':'ARMORY PREVIEW'} // ${gun.category}`; ui.heroWeaponName.textContent=gun.name;
+  ui.heroCosmetic.textContent=cosmetic?`${cosmetic.name} // ${cosmetic.trail?'TRAIL ONLINE':'STATIC FINISH'}`:'FACTORY FINISH // NO TRAIL';
+  ui.heroScope.textContent=gun.scoped?(gun.trait?.split('//')[0]?.trim()||'MAGNIFIED OPTIC'):(gun.kind==='pistol'?'REFLEX ALIGNMENT':'COMBAT OPTIC');
+  ui.heroBarrel.textContent=gun.silent?'SUPPRESSED':gun.caliber||'RESONANCE TUNED'; ui.heroMagazine.textContent=gun.ammoCost===0?'ENERGY EDGE':`${gun.magSize} ROUNDS`; ui.heroTrait.textContent=gun.trait||gun.weaponClass;
+}
+
+function renderLobbyPreview(time,dt) {
+  if (!lobbyPreview || state.started || !ui.lobbyPanels.find(panel=>panel.dataset.panel==='play')?.classList.contains('active')) return;
+  const {renderer:previewRenderer,camera:previewCamera,group,particles,platform}=lobbyPreview; const rect=ui.heroCanvas.getBoundingClientRect();
+  const width=Math.max(2,Math.round(rect.width)); const height=Math.max(2,Math.round(rect.height)); const ratio=Math.min(devicePixelRatio,1.5);
+  if(ui.heroCanvas.width!==Math.round(width*ratio)||ui.heroCanvas.height!==Math.round(height*ratio)){previewRenderer.setPixelRatio(ratio);previewRenderer.setSize(width,height,false);previewCamera.aspect=width/height;previewCamera.updateProjectionMatrix();}
+  if(!lobbyPreview.dragging&&!progress.settings.reduceMotion)lobbyPreview.yaw+=dt*.16;
+  group.rotation.set(lobbyPreview.pitch,lobbyPreview.yaw,-.08); previewCamera.position.z=THREE.MathUtils.damp(previewCamera.position.z,lobbyPreview.zoom,8,dt);
+  particles.rotation.y=time*.08; platform.rotation.z=time*.13; previewRenderer.render(lobbyPreview.scene,previewCamera);
+}
+
+function renderLobbySummary() {
+  if (!ui.liveLoadout) return;
+  ui.liveLoadout.replaceChildren();
+  quickSlots.forEach((weaponIndex,slot)=>{
+    const gun=loadout[weaponIndex]; const cosmetic=cosmeticForSlot(slot); const button=document.createElement('button'); button.type='button'; button.className=`live-slot slot-${slot} ${cosmetic?.rarity||'common'}`;
+    button.innerHTML=`<kbd>${slot+1}</kbd><i>${slotIcons[slot]}</i><span><small>${slotNames[slot]}</small><b>${gun.name}</b><em>${cosmetic?.name||'FACTORY FINISH'}</em></span><strong>${slot===3?(gun.effect==='melee'?'NO AMMO':gun.caliber):gun.magSize+' / '+gun.caliber}</strong>`;
+    button.title=`Open ${slotNames[slot].toLowerCase()} inventory`; button.addEventListener('click',()=>{selectedLobbySlot=slot;showLobbyTab('inventory');}); ui.liveLoadout.append(button);
+  });
+  ui.abilitySummary.innerHTML=['q','e'].map(slot=>{const ability=abilityCatalog[progress.abilities[slot]];return `<span class="ability-${slot}" title="${ability.name}: ${(ability.cooldown/1000).toFixed(0)} second cooldown"><kbd>${slot.toUpperCase()}</kbd><b>${ability.name}</b><em>${(ability.cooldown/1000).toFixed(0)}S</em></span>`;}).join('');
+  ui.passiveSummary.innerHTML=progress.passives.map(id=>`<i title="${passiveCatalog[id].name}">${passiveCatalog[id].icon}<small>${passiveCatalog[id].name}</small></i>`).join('');
+  ui.unopenedCrates.textContent=`${progress.unopenedCrates} READY`; ui.deployMapName.textContent=arenaDefinitions[state.activeArena].name; ui.loadoutReady.textContent=`${quickSlots.filter(index=>index>=0).length}/4 LOADOUT ONLINE`;
+  setLobbyPreviewWeapon(quickSlots[0]);
+}
+
+function featuredRange(gun) { return gun.scoped?'LONG':gun.weaponClass.includes('SHOTGUN')||gun.effect==='melee'?'CLOSE':gun.range&&gun.range<30?'CLOSE':'MID'; }
+function renderFeaturedWeapon() {
+  if (!ui.featured?.name) return;
+  const gun=loadout[featuredWeaponIndex]; const owned=progress.unlocked.has(gun.id); const price=directPrice(gun); const familyColors={NORMAL:'#6bbcff',WEIRD:'#50e5ff',CRAZY:'#ff5a35',CUSTOM:'#b58aff',GEAR:'#67e8a5'};
+  ui.featured.panel.style.setProperty('--family',familyColors[gun.category]||'#50e5ff'); ui.featured.className.textContent=`${gun.category} // ${gun.weaponClass}`; ui.featured.name.textContent=gun.name; ui.featured.description.textContent=gun.trait||gun.weaponClass;
+  ui.featured.damage.textContent=gun.damage; ui.featured.rate.textContent=gun.automatic?Math.round(60000/gun.fireRate):'SEMI'; ui.featured.mag.textContent=gun.magSize; ui.featured.range.textContent=featuredRange(gun);
+  ui.featured.price.textContent=owned?'OWNED':`◆${price}`; ui.featured.buy.textContent=owned?'EQUIP':'BUY'; ui.featured.buy.classList.toggle('cant-afford',!owned&&progress.cash<price);
+}
+
+function changeFeatured(direction=1) { featuredWeaponIndex=(featuredWeaponIndex+direction+loadout.length)%loadout.length; renderFeaturedWeapon(); }
 
 function directPrice(gun) {
   return Math.max(1200, Math.round(gun.price * 1.35 / 50) * 50);
@@ -2268,7 +2530,7 @@ function renderLobbyShop() {
     card.querySelector('button').addEventListener('click', () => {
       if (owned || progress.cash < price) { announceCrate(`NEED $${Math.max(0, price - progress.cash)} MORE FOR ${gun.name}`); return; }
       progress.cash -= price; progress.unlocked.add(gun.id); saveProgress(); updateCashUI();
-      announceCrate(`DIRECT UNLOCK // ${gun.name}`); renderLobbyShop(); renderLobbyInventory(); renderArmory();
+      announceCrate(`DIRECT UNLOCK // ${gun.name}`); lobbyNotify(`WEAPON UNLOCKED // ${gun.name}`,'success'); pulseReactor('success'); uiSound('purchase'); renderLobbyShop(); renderLobbyInventory(); renderArmory();
     });
     ui.lobbyShopGrid.append(card);
   });
@@ -2308,7 +2570,7 @@ function renderLobbyInventory() {
       quickSlots[selectedLobbySlot] = index;
       applyCosmeticToSlot(selectedLobbySlot);
       if (selectedLobbySlot === 0 || state.weaponIndex === previous) switchWeapon(index, false); else updateQuickSlotUI();
-      saveProgress(); renderLobbyInventory();
+      saveProgress(); lobbyNotify(`LOADOUT CHANGED // ${gun.name}`,'info'); uiSound('equip'); renderLobbyInventory(); renderLobbySummary();
     });
     ui.lobbyInventoryGrid.append(card);
   });
@@ -2317,9 +2579,13 @@ function renderLobbyInventory() {
 function showLobbyTab(tab) {
   ui.lobbyTabs.forEach(button => button.classList.toggle('active', button.dataset.lobbyTab === tab));
   ui.lobbyPanels.forEach(panel => panel.classList.toggle('active', panel.dataset.panel === tab));
+  ui.menu.dataset.activePanel=tab; uiSound('select');
   if (tab === 'shop') renderLobbyShop();
   if (tab === 'inventory') renderLobbyInventory();
   if (tab === 'build') renderBuildSelection();
+  if (tab === 'challenges') { renderChallenges(); renderProfile(); }
+  if (tab === 'settings') applySettings();
+  if (tab === 'play') renderLobbySummary();
 }
 
 function renderBuildSelection() {
@@ -2334,6 +2600,7 @@ function renderBuildSelection() {
   progress.passives.forEach(id => {
     const perk=passiveCatalog[id]; const chip=document.createElement('span'); chip.className='passive-chip'; chip.title=perk.name; chip.innerHTML=`<i>${perk.icon}</i><b>${perk.name}</b>`; container.append(chip);
   });
+  renderLobbySummary();
 }
 
 ui.abilityDockOptions.forEach(button => button.addEventListener('click',()=>{ selectedAbilityDock=button.dataset.abilityDock; renderBuildSelection(); }));
@@ -2341,13 +2608,13 @@ ui.abilityOptions.forEach(button => button.addEventListener('click', () => {
   const id=button.dataset.ability; const other=selectedAbilityDock==='q'?'e':'q';
   if (progress.abilities[other]===id) progress.abilities[other]=progress.abilities[selectedAbilityDock];
   progress.abilities[selectedAbilityDock]=id; state.abilityCooldownEnds[selectedAbilityDock]=0;
-  saveProgress(); renderBuildSelection(); refreshAbilityHUD(performance.now());
+  saveProgress(); lobbyNotify(`${selectedAbilityDock.toUpperCase()} ABILITY // ${abilityCatalog[id].name}`,'info'); uiSound('equip'); renderBuildSelection(); refreshAbilityHUD(performance.now());
 }));
 ui.passiveOptions.forEach(button => button.addEventListener('click', () => {
   const id=button.dataset.passive; const index=progress.passives.indexOf(id);
   if (index>=0 && progress.passives.length>1) progress.passives.splice(index,1);
   else if (index<0) { if (progress.passives.length>=3) progress.passives.shift(); progress.passives.push(id); }
-  saveProgress(); renderBuildSelection();
+  saveProgress(); lobbyNotify(`PASSIVES UPDATED // ${progress.passives.length}/3 ONLINE`,'info'); uiSound('equip'); renderBuildSelection();
 }));
 
 ui.lobbyTabs.forEach(button => button.addEventListener('click', () => showLobbyTab(button.dataset.lobbyTab)));
@@ -2356,6 +2623,39 @@ ui.shopFilters.forEach(button => button.addEventListener('click', () => {
   ui.shopFilters.forEach(filter => filter.classList.toggle('active', filter === button));
   renderLobbyShop();
 }));
+
+ui.settingsShortcut?.addEventListener('click',()=>showLobbyTab('settings'));
+ui.editCallsign?.addEventListener('click',()=>{showLobbyTab('settings');document.querySelector('#callsign-setting')?.focus();});
+ui.openShop?.addEventListener('click',()=>showLobbyTab('shop'));
+ui.buildSummary?.addEventListener('click',()=>showLobbyTab('build'));
+ui.changeLoadout?.addEventListener('click',()=>{selectedLobbySlot=0;showLobbyTab('inventory');});
+ui.inspectWeapon?.addEventListener('click',()=>{setLobbyPreviewWeapon(quickSlots[0]);lobbyPreview.yaw=-.9;uiSound('select');});
+ui.randomizePreview?.addEventListener('click',()=>{const owned=loadout.map((gun,index)=>progress.unlocked.has(gun.id)?index:-1).filter(index=>index>=0);setLobbyPreviewWeapon(owned[Math.floor(secureRandom()*owned.length)]);uiSound('select');});
+ui.favoritePreview?.addEventListener('click',()=>{
+  const favorite=favoriteWeaponFromStats(); const index=loadout.indexOf(favorite); if(index<0||!progress.unlocked.has(favorite.id)){lobbyNotify('FAVORITE BLUEPRINT IS STILL LOCKED','warning');pulseReactor('error');uiSound('error');return;}
+  const slot=slotForGun(favorite); const previous=quickSlots[slot]; quickSlots[slot]=index; if(slot===0||state.weaponIndex===previous)switchWeapon(index,false); saveProgress(); setLobbyPreviewWeapon(index); renderLobbySummary(); lobbyNotify(`FAVORITE EQUIPPED // ${favorite.name}`,'success'); uiSound('equip');
+});
+ui.featured.prev?.addEventListener('click',()=>changeFeatured(-1));
+ui.featured.next?.addEventListener('click',()=>changeFeatured(1));
+ui.featured.inspect?.addEventListener('click',()=>{setLobbyPreviewWeapon(featuredWeaponIndex);uiSound('select');});
+ui.featured.buy?.addEventListener('click',()=>{
+  const gun=loadout[featuredWeaponIndex]; const price=directPrice(gun); const owned=progress.unlocked.has(gun.id);
+  if(!owned){if(progress.cash<price){lobbyNotify(`INSUFFICIENT CREDITS // NEED ◆${price-progress.cash}`,'warning');pulseReactor('error');uiSound('error');return;}progress.cash-=price;progress.unlocked.add(gun.id);saveProgress();updateCashUI();renderLobbyShop();lobbyNotify(`WEAPON UNLOCKED // ${gun.name}`,'success');pulseReactor('success');uiSound('purchase');renderFeaturedWeapon();return;}
+  const slot=slotForGun(gun);const previous=quickSlots[slot];const duplicate=quickSlots.indexOf(featuredWeaponIndex);if(duplicate>=0&&duplicate!==slot)quickSlots[duplicate]=previous;quickSlots[slot]=featuredWeaponIndex;applyCosmeticToSlot(slot);if(slot===0||state.weaponIndex===previous)switchWeapon(featuredWeaponIndex,false);saveProgress();renderLobbySummary();renderFeaturedWeapon();lobbyNotify(`EQUIPPED // ${gun.name}`,'success');uiSound('equip');
+});
+ui.audioToggle?.addEventListener('click',toggleMenuMusic);
+ui.fullscreenToggle?.addEventListener('click',toggleFullscreen); ui.settingsFullscreen?.addEventListener('click',toggleFullscreen);
+ui.resetSettings?.addEventListener('click',()=>{progress.settings={...defaultSettings};stopMenuMusic();applySettings();saveProgress();lobbyNotify('SETTINGS RESTORED TO DEFAULTS','info');uiSound('back');});
+ui.settingsInputs.forEach(input=>{
+  const update=()=>{const key=input.dataset.setting;progress.settings[key]=input.type==='checkbox'?input.checked:input.type==='range'?Number(input.value):input.value;if(key==='callsign')progress.settings.callsign=String(progress.settings.callsign).trimStart().slice(0,18);applySettings();saveProgress();};
+  input.addEventListener(input.type==='text'?'change':'input',update);
+});
+document.addEventListener('fullscreenchange',()=>{const active=Boolean(document.fullscreenElement);ui.fullscreenToggle?.classList.toggle('active',active);ui.settingsFullscreen?.classList.toggle('active',active);});
+document.addEventListener('pointerover',event=>{const button=event.target.closest('button');if(!button||button.disabled)return;if(audioContext?.state==='running')uiSound('hover');if(button===ui.deploy)ui.reactor?.classList.add('play-hover');});
+document.addEventListener('pointerout',event=>{if(event.target.closest('button')===ui.deploy)ui.reactor?.classList.remove('play-hover');});
+document.addEventListener('pointermove',event=>{const card=event.target.closest('.map-option,.lobby-card');if(!card)return;const bounds=card.getBoundingClientRect();card.style.setProperty('--tilt-x',`${((event.clientY-bounds.top)/bounds.height-.5)*-3}deg`);card.style.setProperty('--tilt-y',`${((event.clientX-bounds.left)/bounds.width-.5)*4}deg`);});
+document.addEventListener('pointerdown',()=>{if(progress.settings.musicEnabled)ensureMenuMusic();},{once:true});
+setInterval(()=>{if(!state.started&&ui.menu.dataset.activePanel==='play')changeFeatured(1);},15000);
 function secureRandom() {
   if (!globalThis.crypto?.getRandomValues) return Math.random();
   const values = new Uint32Array(1); crypto.getRandomValues(values); return values[0] / 4294967296;
@@ -2384,7 +2684,7 @@ let pendingReward = null;
 function revealCaseReward(cosmetic) {
   const duplicate = progress.cosmetics.has(cosmetic.id); const rarity = rarityData[cosmetic.rarity];
   progress.cosmetics.add(cosmetic.id);
-  if (duplicate) progress.cash += rarity.refund;
+  if (duplicate) { progress.cash += rarity.refund; progress.stats.totalCreditsEarned+=rarity.refund; progress.stats.xp+=rarity.refund; }
   saveProgress(); updateCashUI(); renderLobbyInventory();
   ui.unboxSpinner.classList.add('hidden'); ui.unboxReveal.classList.remove('hidden');
   ui.rewardCard.className = `reward-card ${cosmetic.rarity}`; ui.rewardIcon.textContent = cosmetic.icon; ui.rewardName.textContent = cosmetic.name;
@@ -2392,18 +2692,20 @@ function revealCaseReward(cosmetic) {
   ui.rewardDuplicate.textContent = duplicate ? `DUPLICATE CONVERTED // +$${rarity.refund}` : 'NEW ITEM ADDED TO INVENTORY';
   ui.rewardParticles.style.setProperty('--reward-color', `#${rarity.color.toString(16).padStart(6,'0')}`); ui.rewardParticles.replaceChildren();
   for (let index = 0; index < 28; index++) { const particle = document.createElement('i'); particle.style.setProperty('--angle', `${index * (360 / 28)}deg`); particle.style.animationDelay = `${(index % 4) * .035}s`; ui.rewardParticles.append(particle); }
+  lobbyNotify(`${rarity.label} REWARD // ${cosmetic.name}`,cosmetic.rarity); pulseReactor('reward',1400); uiSound('reward'); renderProfile();
 }
 
 function openCase(caseType) {
   if (crateOpening) return;
   const button = ui.caseButtons.find(item => item.dataset.buyCase === caseType); const cost = Number(button?.dataset.cost || 0);
-  if (progress.cash < cost) { announceCrate(`NEED $${cost - progress.cash} MORE FOR THIS CASE`); return; }
+  if (progress.cash < cost) { announceCrate(`NEED $${cost - progress.cash} MORE FOR THIS CASE`); lobbyNotify(`INSUFFICIENT CREDITS // NEED ◆${cost-progress.cash}`,'warning'); pulseReactor('error'); uiSound('error'); return; }
   crateOpening = true; progress.cash -= cost; saveProgress(); updateCashUI();
   ui.caseOffers.forEach(offer => offer.classList.toggle('opening', offer.dataset.case === caseType));
   const rarity = rollRarity(); pendingReward = rollCosmetic(caseType, rarity);
   const winnerIndex = 36; const sequence = Array.from({ length:43 }, () => rollCosmetic(caseType)); sequence[winnerIndex] = pendingReward;
   ui.spinnerTrack.innerHTML = sequence.map(spinnerCard).join(''); ui.spinnerTrack.style.transition = 'none'; ui.spinnerTrack.style.transform = 'translateX(30px)';
   ui.unboxReveal.classList.add('hidden'); ui.unboxSpinner.classList.remove('hidden'); ui.unboxing.classList.remove('hidden');
+  uiSound('purchase');
   void ui.spinnerTrack.offsetWidth;
   requestAnimationFrame(() => requestAnimationFrame(() => {
     ui.spinnerTrack.style.transition = 'transform 4.35s cubic-bezier(.08,.72,.08,1)';
@@ -2445,6 +2747,7 @@ function searchNearbyLoot() {
   crate.opened = true; crate.lid.rotation.x = -.65; crate.lid.position.set(0, 1.35, -.38); crate.glow.intensity = 0; crate.core.visible = false; crate.ring.visible = false;
   const gun = loadout[state.weaponIndex];
   gun.reserve = gun.maxReserve; addCash(150, 'FIELD SUPPLY CACHE'); updateAmmo();
+  recordChallenge('cache');
   ui.status.textContent = 'FIELD CACHE // AMMO + $150';
   ui.interaction.classList.remove('show'); renderArmory();
 }
@@ -2457,7 +2760,7 @@ function useWireZipline(wire) {
 }
 
 function addCash(amount, reason) {
-  progress.cash += amount; updateCashUI(); saveProgress();
+  progress.cash += amount; if(amount>0){progress.stats.totalCreditsEarned+=amount;progress.stats.xp+=amount;} updateCashUI(); saveProgress();
   const pop = document.createElement('span');
   pop.className = 'credit-pop'; pop.textContent = `+$${amount} // ${reason}`;
   ui.hud.append(pop); setTimeout(() => pop.remove(), 850);
@@ -2515,6 +2818,7 @@ function completeExercise(title = 'RANGE CLEARED') {
   if (state.countdownTimer) clearInterval(state.countdownTimer);
   state.completed = true; state.mouseDown = false; setAiming(false); document.exitPointerLock(); ui.complete.classList.remove('hidden');
   addCash(500, 'CONTRACT COMPLETE');
+  progress.stats.contractsCompleted++; if(state.matchDeaths===0)recordChallenge('survivor'); saveProgress();
   ui.completeTitle.innerHTML = title.replace(' ', '<br />');
   ui.accuracy.textContent = `${Math.round((state.hits / Math.max(1, state.shots)) * 100)}%`; ui.rounds.textContent = state.shots;
 }
@@ -2694,7 +2998,7 @@ function triggerReboundShield() {
 }
 
 function playerDeath() {
-  state.dead = true; state.mouseDown = false; state.camoUntil = 0; releaseGrapple(); removeRewindAnchor(); setAiming(false); keys.clear(); document.exitPointerLock();
+  state.dead = true; state.matchDeaths++; progress.stats.deaths++; saveProgress(); state.mouseDown = false; state.camoUntil = 0; releaseGrapple(); removeRewindAnchor(); setAiming(false); keys.clear(); document.exitPointerLock();
   ui.deathKills.textContent = state.enemyKills; ui.deathCash.textContent = `$${progress.cash}`;
   ui.death.classList.remove('hidden'); ui.interaction.classList.remove('show');
 }
@@ -2817,8 +3121,10 @@ function tuneRenderQuality(now) {
   performanceFrameCount++;
   const elapsed=now-performanceWindowStart; if(elapsed<2200) return;
   const fps=performanceFrameCount*1000/elapsed;
+  const pixelRatioMaximum=configuredPixelRatioMaximum();
+  if(renderPixelRatio>pixelRatioMaximum){renderPixelRatio=pixelRatioMaximum;renderer.setPixelRatio(renderPixelRatio);}
   if(fps<48&&renderPixelRatio>.72){renderPixelRatio=Math.max(.72,renderPixelRatio-.14);renderer.setPixelRatio(renderPixelRatio);fastPerformanceWindows=0;}
-  else if(fps>58&&renderPixelRatio<maximumPixelRatio){fastPerformanceWindows++;if(fastPerformanceWindows>=3){renderPixelRatio=Math.min(maximumPixelRatio,renderPixelRatio+.08);renderer.setPixelRatio(renderPixelRatio);fastPerformanceWindows=0;}}
+  else if(fps>58&&renderPixelRatio<pixelRatioMaximum){fastPerformanceWindows++;if(fastPerformanceWindows>=3){renderPixelRatio=Math.min(pixelRatioMaximum,renderPixelRatio+.08);renderer.setPixelRatio(renderPixelRatio);fastPerformanceWindows=0;}}
   else fastPerformanceWindows=0;
   performanceWindowStart=now; performanceFrameCount=0;
 }
@@ -2827,7 +3133,9 @@ function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), .05);
   const time = clock.elapsedTime;
-  const now = performance.now(); tuneRenderQuality(now); updateAbilitySystems(dt, now); updateShieldRegeneration(dt,now);
+  const now = performance.now();
+  if(!state.started){renderLobbyPreview(time,dt);return;}
+  tuneRenderQuality(now); updateAbilitySystems(dt, now); updateShieldRegeneration(dt,now);
   if (state.started && !state.countdownActive && !state.completed && !state.armoryOpen && !state.dead) updatePlayer(dt);
   const currentGun = loadout[state.weaponIndex];
   if (state.mouseDown && state.locked && currentGun.automatic) fire();
@@ -2844,10 +3152,16 @@ function animate() {
 
 camera.position.copy(state.position);
 applyEquippedCosmetics();
+applySettings();
+initLobbyPreview();
 updateAmmo();
 updateQuickSlotUI();
 updateCashUI();
 renderBuildSelection();
+renderLobbySummary();
+renderFeaturedWeapon();
+renderChallenges();
+renderProfile();
 ui.targets.textContent = String(state.targets).padStart(2, '0');
 ui.enemies.textContent = String(state.hostiles).padStart(2, '0');
 syncArenaVisibility(state.activeArena);

@@ -2,7 +2,7 @@
 
 A browser-based 3D first-person sniper arena built with Three.js and Vite.
 
-The colorful pre-match lobby has Play, Shop, and Inventory tabs. Each five-minute contract begins with a `3…2…1` deployment countdown and a default four-slot combat kit: Specter Carbine, Phantom Suppressed sidearm, Combat Knife, and Frag Bomb. The slots are restricted to Primary, one-handed Secondary pistols, Melee, and Other utility gear. Inventory shows only compatible owned equipment for the selected slot. The saved Other collection includes bouncing bombs, a sticky gravity bomb, an adrenaline medkit, a proximity shock mine, pulse charges, and healing medkits.
+The neon pre-match lobby is a complete local operator hub with Play, Shop, Inventory, Build, Challenges, and Settings panels. Its interactive Three.js hero viewport displays the equipped Primary and cosmetic, while the live four-slot strip, build summary, rotating featured weapon, map vote, case spotlight, reactor, and notification feed all connect to the existing game systems. Each five-minute contract begins with a `3…2…1` deployment countdown and a default four-slot combat kit: Specter Carbine, Phantom Suppressed sidearm, Combat Knife, and Frag Bomb. The slots are restricted to Primary, one-handed Secondary pistols, Melee, and Other utility gear. Inventory shows only compatible owned equipment for the selected slot. The saved Other collection includes bouncing bombs, a sticky gravity bomb, an adrenaline medkit, a proximity shock mine, pulse charges, and healing medkits.
 
 Damaging targets, landing long-range sniper shots, defeating enemies, and completing contracts awards credits. The lobby shop offers $250 Standard Weapon Cases and $750 Hypershot Elite Cases alongside direct weapon purchases. Cases use a 70% Common, 20% Rare, 8.5% Legendary, and 1.5% Exotic rarity roll, then run through a full spinner and reveal sequence. Rewards include persistent weapon finishes, utility skins, melee variants, and colored weapon trails; duplicate rewards convert into credits. Owned cosmetics can be equipped again from Inventory. Field caches supply ammunition and a smaller credit bonus.
 
@@ -21,6 +21,8 @@ The lobby now opens with a full three-card map vote and an eight-second tally. V
 
 The lobby Build tab lets each operator equip two active abilities on `Q` and `E`, plus up to three passive attunements. New active choices include Kinetic Slingshot, Thermal Snapshot, Repulsion Nova, and Quantum Rewind alongside Grapple Slingshot, Temporal Phase Camo, and Decoy Projection. Passives include Aero-Stabilizer, Velocity Conversion, Shadow Step, Apex Predator, Tactical Resilience, Momentum Conservation, Lightweight Frame, and Rebound Shield. The combat HUD tracks both cooldowns and all equipped perks.
 
+The Challenges panel rotates three deterministic local contracts at local midnight and tracks their progress without claiming an online backend. The local profile records earned credits, eliminations, headshots, longest confirmed shot, completed contracts, weapon use, and ability use. Settings persist audio levels, mouse and scope sensitivity, FOV, graphics and shadow quality, camera shake, crosshair appearance, damage-number visibility, reduced motion, and the operator callsign in the existing `resonance-engine-progress` save.
+
 ## Run locally
 
 ```bash
@@ -33,9 +35,9 @@ Open the URL shown by Vite and select **Enter the Engine**.
 ## Controls
 
 - `WASD` or arrow keys — move quickly
-- Mouse — aim
-- Hold left mouse — aim, raise a sniper scope, or preview a bomb's dotted throwing arc (pistols do not ADS)
-- Right mouse — fire or use the equipped item
+- Mouse — look
+- Left mouse — shoot, throw, swing, place, or activate the equipped item
+- Hold right mouse — aim, raise a sniper scope, use a compact pistol zoom, preview a bomb arc, or prepare a melee guard
 - `1` — primary rifle or selected vault weapon
 - `2` — one-handed secondary pistol
 - `3` — combat knife
