@@ -544,7 +544,76 @@ function buildArmoryWeapon(kind, color = 0x596463) {
   const box = (size, pos, material = mats.black, rot) => weaponPart(gun, new THREE.BoxGeometry(...size), material, pos, rot);
   const tube = (radius, length, pos, material = mats.metal) => weaponPart(gun, new THREE.CylinderGeometry(radius, radius * 1.08, length, 10), material, pos, [Math.PI / 2, 0, 0]);
 
-  if (kind === 'medkit') {
+  if (kind === 'pizza') {
+    const crust=new THREE.MeshStandardMaterial({color:0xd9913b,roughness:.82});
+    const cheese=new THREE.MeshStandardMaterial({color:0xffd84e,emissive:0xff8a18,emissiveIntensity:.18,roughness:.7});
+    weaponPart(gun,new THREE.CylinderGeometry(.34,.34,.07,20),crust,[0,.05,-.22],[Math.PI/2,0,0]);
+    weaponPart(gun,new THREE.CylinderGeometry(.29,.29,.075,20),cheese,[0,.05,-.225],[Math.PI/2,0,0]);
+    for(const [x,y] of [[-.12,.13],[.1,.15],[.14,-.06],[-.08,-.1]]) weaponPart(gun,new THREE.SphereGeometry(.045,8,6),new THREE.MeshStandardMaterial({color:0xd52d36}),[x,y,-.27]);
+    box([.55,.12,.52],[0,-.2,.02],new THREE.MeshStandardMaterial({color:0xff4d3f,roughness:.7})); box([.15,.34,.18],[0,-.39,.2],mats.black,[-.18,0,0]);
+    muzzlePosition=[0,.05,-.48];flashSize=.2;
+  } else if (kind === 'fish') {
+    const fish=new THREE.MeshStandardMaterial({color:0xff334b,emissive:0x761322,emissiveIntensity:.18,roughness:.55});
+    const body=weaponPart(gun,new THREE.SphereGeometry(.24,16,10),fish,[0,.03,-.28]);body.scale.set(1.05,.62,1.75);
+    weaponPart(gun,new THREE.ConeGeometry(.24,.38,3),fish,[0,.03,.22],[Math.PI/2,0,0]);
+    weaponPart(gun,new THREE.SphereGeometry(.038,8,6),mats.cream,[.13,.12,-.5]);weaponPart(gun,new THREE.SphereGeometry(.018,8,6),mats.black,[.151,.122,-.523]);
+    tube(.03,.34,[0,.02,-.65],new THREE.MeshStandardMaterial({color:0x4ae6ff,emissive:0x1686aa,emissiveIntensity:.45}));
+    box([.12,.34,.17],[0,-.27,-.04],mats.black,[-.2,0,0]);muzzlePosition=[0,.02,-.86];flashSize=.16;
+  } else if (kind === 'toaster') {
+    const chrome=new THREE.MeshStandardMaterial({color:0xcbd3d9,roughness:.18,metalness:.88});
+    box([.56,.4,.48],[0,.02,-.17],chrome);box([.43,.025,.12],[0,.235,-.17],mats.black);box([.43,.025,.12],[0,.235,-.34],mats.black);
+    for(const x of [-.16,.16])box([.13,.28,.08],[x,.34,-.25],new THREE.MeshStandardMaterial({color:0xc87832,roughness:.85}));
+    box([.14,.36,.18],[0,-.31,.02],mats.black,[-.18,0,0]);muzzlePosition=[0,.13,-.52];flashSize=.28;
+  } else if (kind === 'baguette') {
+    const bread=new THREE.MeshStandardMaterial({color:0xd89c4a,roughness:.92});
+    tube(.12,1.65,[0,.03,-.52],bread);for(const z of [-.15,-.45,-.75])box([.16,.025,.1],[0,.15,z],mats.cream,[0,0,.42]);
+    tube(.09,.34,[0,.22,-.28],new THREE.MeshPhysicalMaterial({color:0xff4f86,transparent:true,opacity:.72,roughness:.2}));
+    weaponPart(gun,new THREE.TorusGeometry(.11,.045,7,14,Math.PI*1.45),bread,[.17,.05,.02],[0,Math.PI/2,0]);
+    box([.14,.36,.18],[0,-.27,.22],mats.black,[-.18,0,0]);muzzlePosition=[0,.03,-1.35];flashSize=.15;
+  } else if (kind === 'chicken') {
+    const yellow=new THREE.MeshStandardMaterial({color:0xffdb35,roughness:.75});
+    const body=weaponPart(gun,new THREE.SphereGeometry(.26,14,10),yellow,[0,.02,-.2]);body.scale.set(.7,1,1.55);
+    weaponPart(gun,new THREE.ConeGeometry(.075,.26,4),new THREE.MeshStandardMaterial({color:0xff7d25}),[0,.02,-.68],[Math.PI/2,0,Math.PI/4]);
+    weaponPart(gun,new THREE.SphereGeometry(.032,8,6),mats.black,[.12,.12,-.46]);box([.13,.38,.19],[0,-.3,.08],mats.black,[-.15,0,0]);
+    muzzlePosition=[0,.02,-.86];flashSize=.3;
+  } else if (kind === 'banana') {
+    const peel=new THREE.MeshStandardMaterial({color:0xffe14f,emissive:0x8d5a00,emissiveIntensity:.18,roughness:.68});
+    box([.22,.22,.56],[0,.04,-.18],peel);weaponPart(gun,new THREE.TorusGeometry(.2,.055,7,18,Math.PI*.8),peel,[0,.03,-.46],[Math.PI/2,0,.32]);
+    weaponPart(gun,new THREE.CylinderGeometry(.17,.17,.16,12),mats.metal,[0,.02,.12],[Math.PI/2,0,0]);box([.13,.38,.18],[0,-.3,.05],mats.black,[-.18,0,0]);muzzlePosition=[0,.04,-.77];flashSize=.16;
+  } else if (kind === 'disco') {
+    weaponPart(gun,new THREE.IcosahedronGeometry(.29,1),new THREE.MeshStandardMaterial({color:0xf5f5ff,metalness:.95,roughness:.08}),[0,.04,-.34]);
+    for(const colorValue of [0xff4fba,0x50e5ff,0xffc857]) weaponPart(gun,new THREE.TorusGeometry(.31,.018,6,20),new THREE.MeshBasicMaterial({color:colorValue}),[0,.04,-.34],[Math.random()*Math.PI,Math.random()*Math.PI,0]);
+    box([.17,.38,.19],[0,-.29,.02],mats.black,[-.18,0,0]);muzzlePosition=[0,.04,-.68];flashSize=.25;
+  } else if (kind === 'cake') {
+    const frosting=new THREE.MeshStandardMaterial({color:0xff75c8,emissive:0x8e205c,emissiveIntensity:.2,roughness:.74});
+    weaponPart(gun,new THREE.CylinderGeometry(.28,.32,.28,16),frosting,[0,.02,-.2],[Math.PI/2,0,0]);
+    for(const x of [-.13,0,.13]){tube(.018,.23,[x,.27,-.2],new THREE.MeshStandardMaterial({color:0x50e5ff}));weaponPart(gun,new THREE.SphereGeometry(.025,6,5),new THREE.MeshBasicMaterial({color:0xffc857}),[x,.4,-.2]);}
+    box([.28,.3,.56],[0,-.1,.2],accent);box([.16,.37,.2],[0,-.34,.24],mats.black,[-.18,0,0]);muzzlePosition=[0,.03,-.58];flashSize=.34;
+  } else if (kind === 'boba') {
+    const cup=new THREE.MeshPhysicalMaterial({color:0x65eaff,transparent:true,opacity:.48,roughness:.12,metalness:.05});
+    weaponPart(gun,new THREE.CylinderGeometry(.23,.18,.58,16),cup,[0,0,-.08]);for(const [x,y,z] of [[-.1,-.18,-.21],[.08,-.16,-.15],[.02,-.2,.02],[-.06,-.12,.08]])weaponPart(gun,new THREE.SphereGeometry(.045,8,6),mats.black,[x,y,z]);
+    tube(.035,.92,[0,.27,-.44],new THREE.MeshStandardMaterial({color:0xff5fae}),);box([.15,.38,.18],[0,-.33,.1],mats.black,[-.18,0,0]);muzzlePosition=[0,.27,-.9];flashSize=.18;
+  } else if (kind === 'gnome') {
+    weaponPart(gun,new THREE.CylinderGeometry(.18,.24,.34,10),new THREE.MeshStandardMaterial({color:0x337ac4}),[0,-.04,-.15]);
+    weaponPart(gun,new THREE.SphereGeometry(.17,12,9),mats.cream,[0,.2,-.15]);weaponPart(gun,new THREE.ConeGeometry(.2,.48,10),new THREE.MeshStandardMaterial({color:0xff334b}),[0,.49,-.15]);
+    box([.18,.35,.18],[0,-.31,.06],mats.black,[-.2,0,0]);muzzlePosition=[0,.2,-.42];flashSize=.13;
+  } else if (kind === 'sock') {
+    const cloth=new THREE.MeshStandardMaterial({color:0x9b6cff,roughness:.96});
+    const body=weaponPart(gun,new THREE.SphereGeometry(.24,12,9),cloth,[0,.03,-.28]);body.scale.set(.68,.85,1.65);box([.28,.36,.28],[0,-.27,.05],cloth,[-.15,0,0]);
+    for(const x of [-.09,.09])weaponPart(gun,new THREE.SphereGeometry(.045,8,6),new THREE.MeshStandardMaterial({color:x<0?0xffc857:0x50e5ff}),[x,.14,-.51]);
+    box([.25,.035,.08],[0,-.02,-.55],mats.black);muzzlePosition=[0,-.01,-.69];flashSize=.25;
+  } else if (kind === 'condiment') {
+    for(const [x,c] of [[-.13,0xe73535],[.13,0xffd23f]]){weaponPart(gun,new THREE.CylinderGeometry(.09,.12,.54,12),new THREE.MeshStandardMaterial({color:c,roughness:.62}),[x,.02,-.2]);weaponPart(gun,new THREE.ConeGeometry(.055,.18,10),new THREE.MeshStandardMaterial({color:c}),[x,.39,-.2]);}
+    box([.32,.11,.23],[0,-.29,-.02],mats.black);muzzlePosition=[0,.4,-.2];flashSize=.2;
+  } else if (kind === 'cart') {
+    const chrome=new THREE.MeshStandardMaterial({color:0xaeb8c2,metalness:.84,roughness:.22});
+    box([.56,.38,.62],[0,.05,-.22],chrome);box([.46,.3,.54],[0,.09,-.26],mats.dark);for(const x of [-.21,.21])for(const z of [-.02,-.43])weaponPart(gun,new THREE.TorusGeometry(.07,.025,7,12),mats.black,[x,-.24,z],[Math.PI/2,0,0]);
+    box([.18,.38,.2],[0,-.33,.12],mats.black,[-.18,0,0]);muzzlePosition=[0,.04,-.62];flashSize=.3;
+  } else if (kind === 'unicorn') {
+    const toy=new THREE.MeshStandardMaterial({color:0xffd9f4,roughness:.58});
+    const body=weaponPart(gun,new THREE.SphereGeometry(.24,14,10),toy,[0,.02,-.23]);body.scale.set(.8,.85,1.55);weaponPart(gun,new THREE.ConeGeometry(.07,.42,10),new THREE.MeshStandardMaterial({color:0xffc857,emissive:0xff63cf,emissiveIntensity:.4}),[0,.27,-.48],[.55,0,0]);
+    for(const [x,c] of [[-.17,0x50e5ff],[0,0xff4fba],[.17,0xffc857]])tube(.028,.65,[x,.16,-.42],new THREE.MeshBasicMaterial({color:c}));box([.15,.38,.18],[0,-.3,.04],mats.black,[-.18,0,0]);muzzlePosition=[0,.07,-.82];flashSize=.28;
+  } else if (kind === 'medkit') {
     box([.42, .28, .52], [0, -.02, -.08], new THREE.MeshStandardMaterial({ color:0xe6edf0, roughness:.7 }));
     box([.08, .18, .535], [0, -.02, -.085], new THREE.MeshBasicMaterial({ color:0xff3e6c }));
     box([.2, .07, .54], [0, -.02, -.086], new THREE.MeshBasicMaterial({ color:0xff3e6c }));
@@ -677,7 +746,7 @@ function blueprint(config) {
   return {
     pellets:1, spread:.004, reloadTime:1700, recoil:.12, automatic:false, tone:88,
     ...config, magSize, ammo:magSize, reserve, maxReserve:reserve,
-    model:buildArmoryWeapon(config.kind || 'rifle', config.color || 0x526467),
+    model:buildArmoryWeapon(config.modelKind || config.kind || 'rifle', config.color || 0x526467),
   };
 }
 
@@ -784,6 +853,25 @@ loadout.push(
   blueprint({id:'comet-shorty',name:'COMET SHORTY',category:'SECONDARY',weaponClass:'RECOIL SHOTGUN',caliber:'12 GA COMPACT',trait:'TWO SHELLS // RECOIL PROPULSION',slot:1,kind:'shotgun',color:0xff7a45,price:14200,magSize:2,reserve:24,damage:18,headDamage:27,pellets:7,spread:.052,fireRate:520,reloadTime:1550,recoil:.34,special:'cometShorty'})
 );
 
+// SILLY / CHAOS // playful hardware with practical crowd-control and movement utility.
+loadout.push(
+  blueprint({id:'pizza-party-launcher',name:'PIZZA PARTY LAUNCHER',category:'SILLY',weaponClass:'RICOCHET FOOD LAUNCHER',caliber:'EXTRA LARGE',trait:'2 BOUNCES // 8-SLICE SPLIT // PINEAPPLE CRIT',slot:3,kind:'grenade',modelKind:'pizza',color:0xff7b3f,price:9800,magSize:2,reserve:8,damage:56,headDamage:92,fireRate:780,reloadTime:2100,recoil:.15,effect:'explosive',blastRadius:7,throwSpeed:31,fuseTime:9000,special:'pizzaParty'}),
+  blueprint({id:'red-fish-blaster',name:'RED FISH BLASTER',category:'SILLY',weaponClass:'CHARGED WATER SIDEARM',caliber:'SPLASH',trait:'RMB CHARGE // WET + KNOCKBACK',slot:1,kind:'pistol',modelKind:'fish',color:0xff334b,price:7200,magSize:12,reserve:72,damage:27,headDamage:68,spread:.004,fireRate:190,reloadTime:1600,recoil:.07,tone:240,special:'redFish'}),
+  blueprint({id:'red-herring',name:'RED HERRING',category:'SILLY',weaponClass:'AI DISTRACTION OTHER',caliber:'FLOP',trait:'5S DECOY // RADAR-HIDING RED SMOKE',slot:3,kind:'grenade',modelKind:'fish',color:0xff2948,price:8600,magSize:2,reserve:6,damage:0,headDamage:0,fireRate:900,reloadTime:2200,recoil:.08,effect:'utilityGrenade',blastRadius:13,throwSpeed:24,fuseTime:5000,special:'redHerring'}),
+  blueprint({id:'tactical-toaster',name:'TACTICAL TOASTER',category:'SILLY',weaponClass:'TWO-SLICE SIDEARM',caliber:'WHOLE WHEAT',trait:'HOLD FIRE // PERFECT TOAST WINDOW // GOLDEN WAFFLE',slot:1,kind:'shotgun',modelKind:'toaster',color:0xd7e2ea,price:9400,magSize:2,reserve:28,damage:18,headDamage:28,pellets:5,spread:.048,fireRate:560,reloadTime:1750,recoil:.22,tone:170,special:'toaster'}),
+  blueprint({id:'baguette-bolt-action',name:'BAGUETTE BOLT-ACTION',category:'SILLY',weaponClass:'ARTISAN BREAD SNIPER',caliber:'BREADSTICK',trait:'JAM-JAR SCOPE // CRUMB TRAIL // CRUNCH CRIT',slot:0,kind:'sniper',modelKind:'baguette',color:0xd89c4a,price:13800,magSize:5,reserve:35,damage:116,headDamage:275,spread:.00045,fireRate:980,reloadTime:2350,recoil:.31,tone:62,scoped:true,special:'baguette'}),
+  blueprint({id:'rubber-chicken-railgun',name:'RUBBER CHICKEN RAILGUN',category:'SILLY',weaponClass:'SCREAM-CHARGE RAILGUN',caliber:'SQUEAK',trait:'HOLD FIRE // FULL CHARGE PIERCES // FEATHER BURST',slot:0,kind:'rail',modelKind:'chicken',color:0xffdc38,price:16800,magSize:4,reserve:24,damage:72,headDamage:158,spread:0,fireRate:980,reloadTime:2300,recoil:.28,tone:320,effect:'pierce',scoped:true,special:'rubberChicken'}),
+  blueprint({id:'banana-peel-revolver',name:'BANANA PEEL REVOLVER',category:'SILLY',weaponClass:'SLIP-HAZARD REVOLVER',caliber:'BANANA',trait:'MISSES BECOME TRAPS // CRITS POP TARGETS UP',slot:1,kind:'pistol',modelKind:'banana',color:0xffdf32,price:10200,magSize:6,reserve:42,damage:32,headDamage:74,spread:.006,fireRate:310,reloadTime:2050,recoil:.18,tone:190,special:'bananaPeel'}),
+  blueprint({id:'disco-ball-mortar',name:'DISCO BALL MORTAR',category:'SILLY',weaponClass:'REVEAL PARTY OTHER',caliber:'4/4',trait:'STICKY LIGHT SCAN // SPEED AURA // FINALE PULSE',slot:3,kind:'grenade',modelKind:'disco',color:0xc779ff,price:12600,magSize:2,reserve:5,damage:52,headDamage:52,fireRate:1000,reloadTime:2500,recoil:.13,effect:'utilityGrenade',blastRadius:15,throwSpeed:23,fuseTime:900,sticky:true,special:'discoBall'}),
+  blueprint({id:'birthday-cake-cannon',name:'BIRTHDAY CAKE CANNON',category:'SILLY',weaponClass:'STICKY PARTY LAUNCHER',caliber:'CAKE',trait:'CANDLE FUSE // CONFETTI BLAST // SELF HEAL',slot:0,kind:'launcher',modelKind:'cake',color:0xff75c8,price:15000,magSize:3,reserve:15,damage:138,headDamage:138,spread:.004,fireRate:930,reloadTime:2550,recoil:.3,tone:132,effect:'cakeExplosive',blastRadius:14,throwSpeed:27,fuseTime:1700,sticky:true,special:'cakeCannon'}),
+  blueprint({id:'bubble-tea-smg',name:'BUBBLE TEA SMG',category:'SILLY',weaponClass:'STICKY PEARL SMG',caliber:'BOBA',trait:'BOUNCE PEARLS // RAPID HITS MAKE SLOW PUDDLES',slot:0,kind:'smg',modelKind:'boba',color:0x65eaff,price:11200,magSize:36,reserve:180,damage:20,headDamage:44,spread:.011,fireRate:68,reloadTime:1750,recoil:.05,tone:260,automatic:true,special:'bubbleTea'}),
+  blueprint({id:'garden-gnome-launcher',name:'GARDEN GNOME LAUNCHER',category:'SILLY',weaponClass:'RECOVERABLE TURRET OTHER',caliber:'GNOME',trait:'TEMP TURRET // F PICKUP REFUNDS CHARGE',slot:3,kind:'mine',modelKind:'gnome',color:0xff3c55,price:13400,magSize:2,reserve:4,damage:13,headDamage:13,fireRate:950,reloadTime:2400,recoil:.1,effect:'gnomeTurret',cooldownDuration:2500,special:'gnomeTurret'}),
+  blueprint({id:'sock-puppet-shotgun',name:'SOCK PUPPET SHOTGUN',category:'SILLY',weaponClass:'LINT-CLOUD SIDEARM',caliber:'BUTTON',trait:'RMB BITE CHARGE // REPEAT HITS CAUSE SNEEZE',slot:1,kind:'shotgun',modelKind:'sock',color:0x9b6cff,price:10800,magSize:5,reserve:40,damage:14,headDamage:21,pellets:6,spread:.06,fireRate:470,reloadTime:1850,recoil:.16,tone:205,special:'sockPuppet'}),
+  blueprint({id:'condiment-blasters',name:'KETCHUP + MUSTARD BLASTERS',category:'SILLY',weaponClass:'DUAL CONDIMENT SIDEARMS',caliber:'SAUCE',trait:'TRACK + SLIP // HOT DOG COMBO',slot:1,kind:'pistol',modelKind:'condiment',color:0xffc82e,price:11800,magSize:18,reserve:90,damage:23,headDamage:52,spread:.008,fireRate:125,reloadTime:1900,recoil:.06,tone:225,automatic:true,special:'condiments'}),
+  blueprint({id:'shopping-cart-cannon',name:'SHOPPING CART CANNON',category:'SILLY',weaponClass:'GROWING KINETIC CANNON',caliber:'AISLE 9',trait:'COLLECTS PROPS // RAMP LAUNCH // HUGE KNOCKBACK',slot:0,kind:'launcher',modelKind:'cart',color:0xaeb8c2,price:15800,magSize:3,reserve:15,damage:72,headDamage:72,spread:0,fireRate:1050,reloadTime:2700,recoil:.38,tone:74,special:'shoppingCart'}),
+  blueprint({id:'unicorn-sprinkler',name:'UNICORN SPRINKLER',category:'SILLY',weaponClass:'RAINBOW WATER CANNON',caliber:'MAGIC',trait:'RAMPING STREAM // SPEED TRAIL // GRENADE DEFLECT',slot:0,kind:'flame',modelKind:'unicorn',color:0xff8fdd,price:14600,magSize:80,reserve:320,damage:7,headDamage:7,pellets:2,spread:.022,fireRate:55,reloadTime:2300,recoil:.025,tone:290,automatic:true,range:48,special:'unicorn'})
+);
+
 // Starter utility kit: familiar baseline gear remains available beside the expanded arsenal.
 loadout.push(
   blueprint({ id:'combat-knife', name:'COMBAT KNIFE', category:'GEAR', weaponClass:'MELEE', caliber:'STEEL', trait:'3.2M LUNGE // NO AMMO', kind:'knife', color:0x667172, price:0, magSize:1, reserve:0, damage:92, headDamage:92, spread:0, fireRate:480, reloadTime:0, recoil:.04, silent:true, ammoCost:0, effect:'melee', range:3.2 }),
@@ -826,6 +914,11 @@ const cosmeticCatalog = [
   { id:'jungle-relic', case:'elite', rarity:'legendary', name:'JUNGLE RELIC BLADE', slot:2, icon:'†', color:0xb8d957, emissive:0x466b18 },
   { id:'pink-pixel-sword', case:'elite', rarity:'exotic', name:'PINK PIXEL SWORD', slot:2, icon:'⚔', color:0xff4fba, emissive:0x9b2fff, trail:0xff4fba },
   { id:'unicorn-shorty', case:'elite', rarity:'exotic', name:'UNICORN SHORTY | HYPERPOP', slot:1, icon:'⌐', color:0xffe3f7, emissive:0x50e5ff, trail:0xff75d1 },
+  { id:'golden-pizza', case:'standard', rarity:'legendary', name:'GOLDEN PIZZA DELIVERY', slot:3, icon:'◉', color:0xffc857, emissive:0xff6b28, trail:0xffc857 },
+  { id:'radioactive-fish', case:'standard', rarity:'rare', name:'RADIOACTIVE RED FISH', slot:1, icon:'⌐', color:0x9dff47, emissive:0x2c9b35, trail:0x9dff47 },
+  { id:'diamond-toaster', case:'elite', rarity:'legendary', name:'DIAMOND TACTICAL TOASTER', slot:1, icon:'⌐', color:0xd9fbff, emissive:0x42cfff, trail:0xd9fbff },
+  { id:'strawberry-boba', case:'standard', rarity:'rare', name:'STRAWBERRY BUBBLE TEA', slot:0, icon:'⌁', color:0xff7ca8, emissive:0xa22c68, trail:0xff7ca8 },
+  { id:'galaxy-chicken', case:'elite', rarity:'exotic', name:'GALAXY RUBBER CHICKEN', slot:0, icon:'⌁', color:0x7047ff, emissive:0xff49d5, trail:0x50e5ff },
 ];
 const abilityCatalog = {
   kinetic:{ name:'KINETIC SLINGSHOT', cooldown:9000 },
@@ -947,7 +1040,7 @@ enemies.forEach(() => { const blip = document.createElement('span'); blip.classN
 
 const state = {
   started: false, locked: false, position: new THREE.Vector3(0, 1.75, 235), velocity: new THREE.Vector3(),
-  yaw: 0, pitch: 0, eyeHeight: 1.75, onGround: true, crouching: false, sliding: false, slideUntil: 0, health: 100, shield: 50, reboundTriggered:false, dead: false, hostileMode: false, firingRange:false, rangeMovingTargets:false, rangeDistance:60, rangeStartedAt:0, rangeKills:0, rangeLastClear:0, airbornePeakY:1.75, matchHeadshots:0, activeArena: 0, weaponIndex: quickSlots[0], reloading: false, reloadTimer: null, mouseDown: false, aiming: false, throwPreview:false, lastShot: 0, lastHazardDamage:0, lastDamageAt:0, lastEnemyShotAt:0, lastLaunchAt:0, matchDeaths:0, swapUntil:0, abilityCooldownEnds:{q:0,e:0}, camoUntil:0, grapple:null, rewind:null, velocityBoostUntil:0, lastRampBoost:0, shots: 0, hits: 0, kills: 0, enemyKills: 0, targets: dummies.length, hostiles: enemies.length, nearestLoot: null, nearestWire: null, zipline: null, impulseUntil: 0, speedBoostUntil:0, healRemaining:0, healEnds:0, shake: 0, armoryOpen: false, completed: false, countdownActive:false, countdownTimer:null, matchStart:0, matchDuration:300000, chargingGun:null, chargeStarted:0, saberGuardUntil:0, saberCooldownUntil:0, phaseBeacon:null, revealedUntil:0,
+  yaw: 0, pitch: 0, eyeHeight: 1.75, onGround: true, crouching: false, sliding: false, slideUntil: 0, health: 100, shield: 50, reboundTriggered:false, dead: false, hostileMode: false, firingRange:false, rangeMovingTargets:false, rangeDistance:60, rangeStartedAt:0, rangeKills:0, rangeLastClear:0, airbornePeakY:1.75, matchHeadshots:0, activeArena: 0, weaponIndex: quickSlots[0], reloading: false, reloadTimer: null, mouseDown: false, aiming: false, throwPreview:false, lastShot: 0, lastHazardDamage:0, lastDamageAt:0, lastEnemyShotAt:0, lastLaunchAt:0, matchDeaths:0, swapUntil:0, abilityCooldownEnds:{q:0,e:0}, camoUntil:0, grapple:null, rewind:null, velocityBoostUntil:0, lastRampBoost:0, shots: 0, hits: 0, kills: 0, enemyKills: 0, targets: dummies.length, hostiles: enemies.length, nearestLoot: null, nearestWire: null, nearestGnome:null, zipline: null, impulseUntil: 0, speedBoostUntil:0, healRemaining:0, healEnds:0, shake: 0, armoryOpen: false, completed: false, countdownActive:false, countdownTimer:null, matchStart:0, matchDuration:300000, chargingGun:null, chargeStarted:0, saberGuardUntil:0, saberCooldownUntil:0, phaseBeacon:null, revealedUntil:0,
 };
 let selectedLobbySlot = 0;
 let selectedAbilityDock = 'q';
@@ -977,6 +1070,10 @@ const fractureMarks = [];
 const hardlightWalls = [];
 const utilityFields = [];
 const ammoSynths = [];
+const chaosParticles = [];
+const bananaPeels = [];
+const gnomeTurrets = [];
+const shoppingCarts = [];
 const trajectoryPositions = new Float32Array(36 * 3);
 const trajectoryGeometry = new THREE.BufferGeometry();
 trajectoryGeometry.setAttribute('position', new THREE.BufferAttribute(trajectoryPositions, 3));
@@ -1135,7 +1232,10 @@ document.addEventListener('keydown', (e) => {
 document.addEventListener('keyup', (e) => keys.delete(e.code));
 function setAiming(active) {
   const gun = loadout[state.weaponIndex];
-  const utility=['grenade','medkit','mine','knife'].includes(gun.kind)||gun.effect==='melee';
+  const prepareOnly=['redFish','sockPuppet'].includes(gun.special);
+  const utility=['grenade','medkit','mine','knife'].includes(gun.kind)||gun.effect==='melee'||prepareOnly;
+  if(active&&prepareOnly&&state.locked&&!state.reloading){gun.prepareStarted=performance.now();ui.status.textContent=`${gun.name} // PREPARING`;}
+  if(!active&&prepareOnly&&gun.prepareStarted){gun.chargeScale=THREE.MathUtils.clamp((performance.now()-gun.prepareStarted)/900,.2,1);gun.prepareStarted=0;ui.status.textContent=`${gun.name} // ${(gun.chargeScale*100).toFixed(0)}% READY`;}
   state.aiming = Boolean(active && state.locked && !state.countdownActive && !utility && !state.reloading && !state.armoryOpen);
   state.throwPreview = Boolean(active && state.locked && !state.countdownActive && gun.kind === 'grenade' && !state.reloading && !state.armoryOpen);
   if(active&&state.locked&&(gun.kind==='knife'||gun.effect==='melee')&&performance.now()>=state.saberCooldownUntil){state.saberGuardUntil=performance.now()+520;ui.status.textContent=`${gun.name} // GUARD READY`;}
@@ -1150,8 +1250,8 @@ document.addEventListener('mousedown', (e) => {
   if (e.button === 0 && state.locked) {
     state.mouseDown = true;
     const gun = loadout[state.weaponIndex];
-    if (gun.special === 'harmonic' && !state.reloading && gun.ammo > 0) {
-      state.chargingGun = gun; state.chargeStarted = performance.now(); ui.status.textContent = 'HARMONIC RAIL // CHARGING';
+    if (['harmonic','toaster','rubberChicken'].includes(gun.special) && !state.reloading && gun.ammo > 0) {
+      state.chargingGun = gun; state.chargeStarted = performance.now(); ui.status.textContent = `${gun.name} // CHARGING`; if(gun.category==='SILLY')chaosSound(gun.special==='rubberChicken'?'squeak':'charge',260);
     } else fire();
   }
 });
@@ -1160,7 +1260,7 @@ document.addEventListener('mouseup', (e) => {
   if (e.button === 0) {
     state.mouseDown = false;
     if (state.chargingGun) {
-      const gun = state.chargingGun; gun.chargeScale = THREE.MathUtils.clamp((performance.now() - state.chargeStarted) / 1250, .18, 1);
+      const gun = state.chargingGun; gun.chargeScale = THREE.MathUtils.clamp((performance.now() - state.chargeStarted) / (gun.special==='toaster'?1050:1250), .18, 1);
       state.chargingGun = null; fire();
     }
   }
@@ -1541,6 +1641,23 @@ function shotSound(gun) {
   const effectsGain=progress.settings.masterVolume*progress.settings.effectsVolume;
   gain.gain.setValueAtTime((gun.silent ? .035 : gun.weaponClass.includes('SHOTGUN') || gun.weaponClass === 'BREAK ACTION' ? .22 : .14)*effectsGain, now); gain.gain.exponentialRampToValueAtTime(.001, now + .11);
   osc.connect(gain).connect(audioContext.destination); osc.start(now); osc.stop(now + .12);
+  if(gun.category==='SILLY')chaosSound(gun.special==='baguette'?'crunch':gun.special==='rubberChicken'?'squeak':'pop',gun.tone||210,.42);
+}
+
+function chaosSound(kind='pop',pitch=220,volume=1) {
+  if(progress.settings.masterVolume<=0||progress.settings.effectsVolume<=0)return;
+  ensureAudio();if(!audioContext)return;const now=audioContext.currentTime;const gain=audioContext.createGain();gain.gain.setValueAtTime(.045*volume*progress.settings.masterVolume*progress.settings.effectsVolume,now);gain.gain.exponentialRampToValueAtTime(.001,now+.22);gain.connect(audioContext.destination);
+  const osc=audioContext.createOscillator();osc.type=kind==='crunch'?'square':kind==='squeak'?'sine':'triangle';osc.frequency.setValueAtTime(Math.max(55,pitch),now);
+  if(kind==='squeak')osc.frequency.exponentialRampToValueAtTime(Math.max(440,pitch*2.3),now+.18);else if(kind==='crunch')osc.frequency.exponentialRampToValueAtTime(48,now+.08);else osc.frequency.exponentialRampToValueAtTime(Math.max(70,pitch*.55),now+.16);
+  osc.connect(gain);osc.start(now);osc.stop(now+.23);
+}
+
+function createChaosBurst(point,colors=[0xff4fba,0x50e5ff,0xffc857,0xe7ff57],count=14,spread=7) {
+  while(chaosParticles.length>120){const old=chaosParticles.shift();world.remove(old.mesh);old.mesh.geometry.dispose();old.mesh.material.dispose();}
+  for(let index=0;index<count;index++){
+    const color=colors[index%colors.length];const geometry=index%3===0?new THREE.BoxGeometry(.1,.1,.18):new THREE.SphereGeometry(.075,6,4);const material=new THREE.MeshBasicMaterial({color,transparent:true,opacity:1});const mesh=new THREE.Mesh(geometry,material);mesh.position.copy(point);world.add(mesh);
+    chaosParticles.push({mesh,velocity:new THREE.Vector3((Math.random()-.5)*spread,Math.random()*spread*.8+1,(Math.random()-.5)*spread),life:.65+Math.random()*.45});
+  }
 }
 
 function throwVector(gun) {
@@ -1581,6 +1698,11 @@ function updateThrowTrajectory() {
   }
   if (!state.throwPreview) return;
   const { origin, velocity } = throwVector(gun);
+  if(gun.special==='pizzaParty'){
+    const point=origin.clone();const motion=velocity.clone();let count=0;let bounces=0;
+    for(let index=0;index<36;index++){motion.y-=18*.085;point.addScaledVector(motion,.085);const floor=groundHeightAt(point.x,point.z)+.12;if(point.y<=floor){point.y=floor;motion.y=Math.abs(motion.y)*.42;motion.x*=.78;motion.z*=.78;bounces++;}if(pointInsideActiveCollider(point)){motion.x*=-.55;motion.z*=-.55;motion.y=Math.max(2,Math.abs(motion.y)*.35);bounces++;}trajectoryPositions[count*3]=point.x;trajectoryPositions[count*3+1]=point.y;trajectoryPositions[count*3+2]=point.z;count++;if(bounces>=2)break;}
+    trajectoryGeometry.setDrawRange(0,count);trajectoryGeometry.attributes.position.needsUpdate=true;return;
+  }
   let count = 0;
   for (let index = 0; index < 36; index++) {
     const time = index * .085;
@@ -1593,14 +1715,25 @@ function updateThrowTrajectory() {
 
 function throwExplosive(gun) {
   const { origin, velocity } = throwVector(gun);
-  const color = gun.effect === 'gravityBomb' ? 0x9b6cff : gun.id === 'pulse-charge' ? 0xff4fba : 0xffc857;
+  const color = gun.effect === 'gravityBomb' ? 0x9b6cff : gun.id === 'pulse-charge' ? 0xff4fba : gun.color||0xffc857;
   const group = new THREE.Group(); group.position.copy(origin); world.add(group);
-  const shell = new THREE.Mesh(new THREE.SphereGeometry(.24, 10, 8), new THREE.MeshStandardMaterial({ color, emissive:color, emissiveIntensity:.28, metalness:.55, roughness:.38 })); group.add(shell);
+  const shellGeometry=gun.special==='pizzaParty'?new THREE.CylinderGeometry(.34,.34,.07,18):gun.special==='redHerring'?new THREE.ConeGeometry(.16,.52,8):gun.special==='discoBall'?new THREE.IcosahedronGeometry(.27,1):gun.special==='cakeCannon'?new THREE.CylinderGeometry(.3,.34,.24,14):new THREE.SphereGeometry(.24,10,8);
+  const shell = new THREE.Mesh(shellGeometry, new THREE.MeshStandardMaterial({ color, emissive:color, emissiveIntensity:.28, metalness:gun.special==='discoBall'?.9:.55, roughness:.38 })); if(gun.special==='pizzaParty'||gun.special==='cakeCannon')shell.rotation.x=Math.PI/2;group.add(shell);
   const band = new THREE.Mesh(new THREE.TorusGeometry(.25, .035, 6, 14), new THREE.MeshBasicMaterial({ color:0xffffff })); band.rotation.x = Math.PI / 2; group.add(band);
   const light = new THREE.PointLight(color, 4, 5); group.add(light);
-  thrownExplosives.push({ group, velocity, gun, detonatesAt:performance.now() + (gun.fuseTime || 1800), bounces:0, stuck:false });
+  thrownExplosives.push({ group, velocity, gun, detonatesAt:performance.now() + (gun.fuseTime || 1800), bounces:0, stuck:false, nextNoise:performance.now()+420 });
   setAiming(false); ui.status.textContent = `${gun.name} THROWN // ${gun.sticky ? 'SEEKING SURFACE' : 'FUSE LIVE'}`;
   if (gun.ammo <= 0) setTimeout(() => { if (loadout[state.weaponIndex] === gun && gun.ammo <= 0) reload(); }, 320);
+}
+
+function splitPizzaProjectile(projectile) {
+  const point=projectile.group.position.clone();const index=thrownExplosives.indexOf(projectile);if(index>=0)thrownExplosives.splice(index,1);world.remove(projectile.group);projectile.group.traverse(child=>{child.geometry?.dispose();child.material?.dispose();});
+  createChaosBurst(point,[0xffd84e,0xff5538,0x7bdc3b],26,10);chaosSound('pop',310,1.4);
+  for(let slice=0;slice<8;slice++){
+    const direction=new THREE.Vector3(Math.cos(slice*Math.PI/4),.1,Math.sin(slice*Math.PI/4));const end=point.clone().addScaledVector(direction,13);addBeam(point,end,slice%2?0xff5538:0xffd84e,240);
+    for(const target of [...dummies,...enemies]){if(!target.alive||target.arena!==state.activeArena)continue;const relative=target.group.position.clone().sub(point);const forward=relative.dot(direction);if(forward<0||forward>13)continue;const closest=point.clone().addScaledVector(direction,forward);if(target.group.position.distanceTo(closest)>2.4)continue;target.lastDamagingGun=projectile.gun;damageTarget(target,18);}
+  }
+  ui.status.textContent='PIZZA PARTY // EIGHT-SLICE SPLIT';
 }
 
 function detonateThrownExplosive(projectile) {
@@ -1621,6 +1754,7 @@ function detonateThrownExplosive(projectile) {
     damageTarget(target, damage);
   }
   if (projectile.gun.effect === 'gravityBomb') createGravityWell(point, projectile.gun);
+  if(projectile.gun.special==='cakeCannon'&&state.position.distanceTo(point)<=radius){state.health=Math.min(100,state.health+18);updateVitals();ui.status.textContent='BIRTHDAY BLAST // +18 HEALTH';createChaosBurst(point,[0xff75c8,0x50e5ff,0xffc857,0xe7ff57],32,12);chaosSound('pop',392,1.5);}
   if (projectile.gun.special === 'breachCharge') {
     for (const wall of [...hardlightWalls]) if (wall.mesh.position.distanceTo(point)<=radius*1.35) removeHardlightWall(wall);
   }
@@ -1633,13 +1767,21 @@ function detonateThrownExplosive(projectile) {
 function updateThrownExplosives(dt) {
   const now = performance.now();
   for (const projectile of [...thrownExplosives]) {
+    if(projectile.gun.special==='redHerring'){projectile.group.rotation.z=Math.sin(now*.018)*.7;if(now>=projectile.nextNoise){projectile.nextNoise=now+720;chaosSound('squeak',150+Math.random()*180,.75);createChaosBurst(projectile.group.position,[0xff2948,0xffffff],3,2);}}
     if (projectile.stuck) {
+      if(projectile.stuckTarget?.alive)projectile.group.position.copy(targetCenter(projectile.stuckTarget));
       projectile.group.rotation.y += dt * 2.5;
       if (now >= projectile.detonatesAt) detonateThrownExplosive(projectile);
       continue;
     }
     projectile.velocity.y -= 18 * dt;
     const next = projectile.group.position.clone().addScaledVector(projectile.velocity, dt);
+    if(['pizzaParty','cakeCannon'].includes(projectile.gun.special)){
+      const struck=[...dummies,...enemies].find(target=>target.alive&&target.arena===state.activeArena&&!projectile.hitTargets?.has(target)&&targetCenter(target).distanceTo(next)<1.35);
+      if(struck){projectile.hitTargets||=new Set();projectile.hitTargets.add(struck);const critical=projectile.gun.special==='pizzaParty'&&next.y-struck.group.position.y>(struck.kind==='enemy'?3.35:5.05);struck.lastDamagingGun=projectile.gun;damageTarget(struck,projectile.gun.special==='pizzaParty'?(critical?projectile.gun.headDamage:projectile.gun.damage):42);createChaosBurst(targetCenter(struck),projectile.gun.special==='pizzaParty'?[0xffd84e,0xff5538]:[0xff75c8,0x50e5ff,0xffc857],18,8);
+        if(projectile.gun.special==='pizzaParty'){struck.slowUntil=now+1800;projectile.velocity.multiplyScalar(-.55);projectile.velocity.y=Math.max(4,Math.abs(projectile.velocity.y));projectile.bounces++;if(critical){createPulseBlast(next,8,0xffe23f);createChaosBurst(next,[0xffe23f,0x8bd83d,0xffffff],28,11);for(const other of [...dummies,...enemies])if(other.alive&&other!==struck&&other.group.position.distanceTo(next)<8)damageTarget(other,34);ui.status.textContent='PINEAPPLE CRITICAL // TROPICAL BLAST';}}
+        else{projectile.group.position.copy(next);projectile.velocity.set(0,0,0);projectile.stuck=true;projectile.stuckTarget=struck;projectile.detonatesAt=Math.min(projectile.detonatesAt,now+1200);ui.status.textContent='BIRTHDAY CAKE // CANDLES LIT';continue;}}
+    }
     const floor = groundHeightAt(next.x, next.z) + .24;
     if (next.y <= floor) {
       next.y = floor;
@@ -1648,11 +1790,12 @@ function updateThrownExplosives(dt) {
         ui.status.textContent = `${projectile.gun.name} // ARMED`;
       } else if (Math.abs(projectile.velocity.y) > 2 && projectile.bounces < 3) {
         projectile.velocity.y = Math.abs(projectile.velocity.y) * .42; projectile.velocity.x *= .72; projectile.velocity.z *= .72; projectile.bounces++;
+        if(projectile.gun.special==='pizzaParty'&&projectile.bounces>=2){projectile.group.position.copy(next);splitPizzaProjectile(projectile);continue;}
       } else { projectile.velocity.y = 0; projectile.velocity.x *= .9; projectile.velocity.z *= .9; }
     }
     if (!projectile.stuck && pointInsideActiveCollider(next) && projectile.gun.sticky && !(projectile.gun.special==='resonanceDisc'&&projectile.bounces<1)) {
       projectile.velocity.set(0, 0, 0); projectile.stuck = true; ui.status.textContent = `${projectile.gun.name} // ARMED`;
-    } else if (!projectile.stuck && pointInsideActiveCollider(next)) { projectile.velocity.x *= -.3; projectile.velocity.z *= -.3; projectile.velocity.y = Math.max(2, Math.abs(projectile.velocity.y) * .3); projectile.bounces++; }
+    } else if (!projectile.stuck && pointInsideActiveCollider(next)) { projectile.velocity.x *= -.3; projectile.velocity.z *= -.3; projectile.velocity.y = Math.max(2, Math.abs(projectile.velocity.y) * .3); projectile.bounces++; if(projectile.gun.special==='pizzaParty'&&projectile.bounces>=2){projectile.group.position.copy(next);splitPizzaProjectile(projectile);continue;} }
     else projectile.group.position.copy(next);
     projectile.group.rotation.x += dt * 8; projectile.group.rotation.z += dt * 5;
     if (now >= projectile.detonatesAt || Math.abs(next.x) > 345 || Math.abs(next.z) > 345) detonateThrownExplosive(projectile);
@@ -1670,7 +1813,8 @@ function createUtilityField(point,gun) {
   const radius=gun.blastRadius||10; const color=gun.color||0x50e5ff;
   const ring=new THREE.Mesh(new THREE.RingGeometry(radius*.75,radius,40),new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.28,depthWrite:false})); ring.rotation.x=-Math.PI/2; ring.position.y=.08; group.add(ring);
   const column=new THREE.Mesh(new THREE.CylinderGeometry(radius*.92,radius*.92,gun.special==='updraft'?16:.18,32,1,true),new THREE.MeshBasicMaterial({color,transparent:true,opacity:gun.special==='updraft'?.09:.045,side:THREE.DoubleSide,depthWrite:false})); column.position.y=gun.special==='updraft'?8:.1; group.add(column);
-  utilityFields.push({group,ring,column,point:point.clone(),gun,radius,expires:performance.now()+(gun.special==='resonanceDisc'?3200:7000),nextPulse:0,pulses:0,launched:new Map()});
+  const durations={resonanceDisc:3200,redHerring:5200,discoBall:6200,bubblePuddle:5200,mustardTrail:4800,unicornTrail:4200};
+  utilityFields.push({group,ring,column,point:point.clone(),gun,radius,expires:performance.now()+(durations[gun.special]||7000),nextPulse:0,pulses:0,launched:new Map(),finale:false});
 }
 
 function removeHardlightWall(wall) {
@@ -1705,14 +1849,17 @@ function fire() {
     const recoilDirection=new THREE.Vector3();camera.getWorldDirection(recoilDirection);state.velocity.addScaledVector(recoilDirection,-14);state.impulseUntil=now+620;
     if(recoilDirection.y<-.08){state.onGround=false;state.airbornePeakY=state.position.y;}state.shake=Math.max(state.shake,.13);ui.status.textContent='COMET RECOIL // MOMENTUM ADDED';
   }
+  if(gun.special==='condiments'){gun.condimentMode=gun.condimentMode==='mustard'?'ketchup':'mustard';ui.status.textContent=`CONDIMENT BLASTERS // ${gun.condimentMode.toUpperCase()}`;}
   const activeSlot = quickSlots.indexOf(state.weaponIndex); const cosmetic = activeSlot >= 0 ? cosmeticForSlot(activeSlot) : null;
   if (cosmetic?.trail && !['grenade','medkit','mine','knife'].includes(gun.kind)) {
     const trailDirection = new THREE.Vector3(); camera.getWorldDirection(trailDirection);
     addBeam(camera.position.clone(), camera.position.clone().addScaledVector(trailDirection, 120), cosmetic.trail, 95);
   }
   ui.crosshair.classList.remove('fire'); void ui.crosshair.offsetWidth; ui.crosshair.classList.add('fire');
+  if(gun.special==='cakeCannon'){throwExplosive(gun);return;}
+  if(gun.special==='shoppingCart'){launchShoppingCart(gun);return;}
   if (gun.kind === 'grenade') { throwExplosive(gun); return; }
-  if (['void','repulsor','acoustic','magnet','wire','melee','heal','adrenaline','shockMine','hardlightWall','mirrorDrone','phaseBeacon','ammoSynth'].includes(gun.effect)) { fireExperimental(gun); return; }
+  if (['void','repulsor','acoustic','magnet','wire','melee','heal','adrenaline','shockMine','hardlightWall','mirrorDrone','phaseBeacon','ammoSynth','gnomeTurret'].includes(gun.effect)) { fireExperimental(gun); return; }
   if (gun.special === 'ricochet') { fireRicochetShot(gun); return; }
   if (gun.special === 'orbitBreaker') { fireOrbitBreaker(gun); return; }
   const damageByTarget = new Map();
@@ -1726,7 +1873,14 @@ function fire() {
     raycaster.setFromCamera(aim, camera);
     raycaster.far = gun.range || Infinity;
     const hits = raycaster.intersectObjects(raycastObjects, false);
-    if (!hits.length) continue;
+    if (!hits.length) {
+      const missPoint=camera.position.clone();const missDirection=new THREE.Vector3();camera.getWorldDirection(missDirection);missPoint.addScaledVector(missDirection,Math.min(gun.range||45,45));missPoint.y=Math.max(groundHeightAt(missPoint.x,missPoint.z)+.08,missPoint.y);
+      if(gun.special==='bananaPeel')createBananaPeel(missPoint,gun);
+      if(gun.special==='bubbleTea')createSillyField(missPoint,gun,'bubblePuddle',4.5);
+      if(gun.special==='condiments'&&gun.condimentMode==='mustard')createSillyField(missPoint,gun,'mustardTrail',3.2);
+      if(gun.special==='unicorn')createSillyField(state.position.clone(),gun,'unicornTrail',3.8);
+      continue;
+    }
     if (gun.effect === 'explosive') {
       const impact = hits[0].point;
       [...dummies, ...enemies].filter(target => target.alive).forEach(target => {
@@ -1741,6 +1895,10 @@ function fire() {
     for (const hit of pelletHits) {
       if (hit.object.userData.collider) {
         if(gun.special==='glassline')glasslineSurfaceImpact(hit.point,gun,now);
+        if(gun.special==='bananaPeel')createBananaPeel(hit.point,gun);
+        if(gun.special==='bubbleTea'){bubbleTeaBounceImpact(hit,gun);createSillyField(hit.point,gun,'bubblePuddle',4.5);}
+        if(gun.special==='condiments'&&gun.condimentMode==='mustard')createSillyField(hit.point,gun,'mustardTrail',3.2);
+        if(gun.special==='rubberChicken'){createChaosBurst(hit.point,[0xffdc38,0xffffff],18,6);chaosSound('squeak',420,1.2);}
         if(gun.special==='harmonic'&&!piercedWall&&(gun.chargeScale||0)>.65){piercedWall=true;continue;}
         break;
       }
@@ -1751,6 +1909,8 @@ function fire() {
       const isHeadshot = hit.object === target.head || hit.object === target.face;
       let damage = isHeadshot ? gun.headDamage : gun.damage;
       if (gun.special === 'harmonic') damage *= .55 + (gun.chargeScale || .18) * .9;
+      if(gun.special==='rubberChicken')damage*=.55+(gun.chargeScale||.18)*1.05;
+      if(gun.special==='toaster'){const charge=gun.chargeScale||.18;if(charge>.4&&charge<.82)damage*=1.45;else if(charge>=.95)damage*=.72;if(charge>.35&&Math.random()<.08){damage*=2;ui.status.textContent='GOLDEN WAFFLE // CRITICAL BREAKFAST';createChaosBurst(hit.point,[0xffc857,0xffffff],20,8);}}
       if (gun.special === 'meteor' && !state.onGround && state.velocity.y < 0) damage *= 1.5;
       if (gun.special === 'stormcoil') damage *= 1 + (gun.sprintCharge || 0) * .8;
       if (gun.special === 'counterbeat' && now-state.lastEnemyShotAt < 850) damage *= 1.65;
@@ -1765,6 +1925,8 @@ function fire() {
     if ((gun.chargeScale || 0) >= .98) { state.revealedUntil=now+3500; ui.status.textContent='FULL HARMONIC DISCHARGE // POSITION REVEALED'; }
     gun.chargeScale=0;
   }
+  if(gun.special==='rubberChicken'){if((gun.chargeScale||0)>.92){createChaosBurst(camera.position.clone().add(new THREE.Vector3(0,-.2,0)),[0xffdc38,0xffffff,0xff4fba],24,9);ui.status.textContent='RUBBER CHICKEN // FULL SCREAM PIERCE';}gun.chargeScale=0;}
+  if(gun.special==='toaster'){if((gun.chargeScale||0)>=.95){createSillyField(state.position.clone(),gun,'toastSmoke',4);ui.status.textContent='BURNT TOAST // SMOKE SCREEN';}else if((gun.chargeScale||0)>.4)ui.status.textContent='PERFECTLY COOKED // BONUS DAMAGE';gun.chargeScale=0;}
   if (gun.special === 'stormcoil') gun.sprintCharge=0;
   if (damageByTarget.size) state.hits++;
   damageByTarget.forEach((damage, target) => {
@@ -1841,8 +2003,9 @@ function applyWeaponHitSpecial(gun,target,damage,now=performance.now()) {
     const direction=new THREE.Vector3(); camera.getWorldDirection(direction); pushTarget(target,direction,8); state.velocity.addScaledVector(direction,-8); state.impulseUntil=now+350;
   }
   if (gun.special === 'arcWasp') {
-    const chained=[...dummies,...enemies].find(other=>other.alive&&other!==target&&other.group.position.distanceTo(target.group.position)<7);
-    if (chained) { addBeam(targetCenter(target),targetCenter(chained),0x55c8ff,160); damageTarget(chained,Math.max(8,Math.round(damage*.45))); }
+    if((target.wetUntil||0)>now)damage*=1.25;
+    const chainRadius=(target.wetUntil||0)>now?11:7;const chained=[...dummies,...enemies].find(other=>other.alive&&other!==target&&other.group.position.distanceTo(target.group.position)<chainRadius);
+    if (chained) { addBeam(targetCenter(target),targetCenter(chained),0x55c8ff,160); damageTarget(chained,Math.max(8,Math.round(damage*(((target.wetUntil||0)>now)?.62:.45)))); }
   }
   if (gun.special === 'stutter') {
     const echoDamage=Math.max(8,Math.round(damage*.42)); const center=targetCenter(target);
@@ -1855,6 +2018,34 @@ function applyWeaponHitSpecial(gun,target,damage,now=performance.now()) {
     if (!collides(destination.x,destination.z)) state.position.copy(destination); ui.status.textContent='BLINK DERRINGER // PHASE BACKSTEP';
   }
   if (gun.special === 'tracker6') { target.pingedUntil=now+6000; ui.status.textContent='TRACKER-6 // TRANSMITTER ATTACHED'; }
+  if(gun.special==='redFish'){
+    const charge=gun.chargeScale||.2;damage*=.8+charge;target.wetUntil=now+5000;target.slowUntil=now+900+charge*800;
+    if(charge>.55){const direction=target.group.position.clone().sub(state.position);pushTarget(target,direction,4+charge*8);createChaosBurst(targetCenter(target),[0x50e5ff,0xffffff],18,8);ui.status.textContent='RED FISH // CHARGED WATER BLAST';}gun.chargeScale=0;
+  }
+  if(gun.special==='baguette'){
+    createChaosBurst(targetCenter(target),[0xd89c4a,0xffe8aa],target.lastShotMeta?.headshot?22:9,target.lastShotMeta?.headshot?9:4);
+    if(target.lastShotMeta?.headshot){chaosSound('crunch',88,1.5);ui.status.textContent='BAGUETTE CRUNCH // HEADSHOT';}
+  }
+  if(gun.special==='bananaPeel'&&target.lastShotMeta?.headshot){target.group.position.y+=2.4;target.stunnedUntil=now+520;createChaosBurst(targetCenter(target),[0xffe14f,0xffffff],16,8);ui.status.textContent='BANANA CRITICAL // TARGET POPPED';}
+  if(gun.special==='bubbleTea'){
+    target.bobaHits=(target.bobaHits||0)+1;if(target.bobaHits>=5){target.bobaHits=0;createSillyField(target.group.position.clone(),gun,'bubblePuddle',5.2);ui.status.textContent='BUBBLE TEA // STICKY PUDDLE';}
+    createChaosBurst(targetCenter(target),[0x3a263f,0xff75c8,0x65eaff],4,3);
+  }
+  if(gun.special==='sockPuppet'){
+    const charge=gun.chargeScale||.2;damage*=.9+charge*.45;target.sneezeHits=(target.sneezeHits||0)+1;
+    if(target.sneezeHits>=4){target.sneezeHits=0;target.stunnedUntil=now+650;createChaosBurst(targetCenter(target),[0xd8d2ff,0xffffff],20,7);chaosSound('squeak',360,1);ui.status.textContent='SOCK PUPPET // SNEEZE DISRUPTION';}gun.chargeScale=0;
+  }
+  if(gun.special==='condiments'){
+    if(gun.condimentMode==='ketchup'){target.ketchupUntil=now+4200;target.pingedUntil=now+4200;createChaosBurst(targetCenter(target),[0xff3038],7,4);}
+    else{target.mustardUntil=now+4200;target.slowUntil=now+900;createSillyField(target.group.position.clone(),gun,'mustardTrail',3.2);createChaosBurst(targetCenter(target),[0xffd83d],7,4);}
+    if((target.ketchupUntil||0)>now&&(target.mustardUntil||0)>now){target.ketchupUntil=0;target.mustardUntil=0;damage+=54;createPulseBlast(targetCenter(target),7,0xff8a2f);createChaosBurst(targetCenter(target),[0xff3038,0xffd83d],24,10);chaosSound('pop',196,1.5);ui.status.textContent='HOT DOG COMBO // SAUCE DETONATION';}
+  }
+  if(gun.special==='unicorn'){
+    if(gun.streamTarget===target&&now-(gun.streamAt||0)<280)gun.streamHits=(gun.streamHits||0)+1;else gun.streamHits=1;gun.streamTarget=target;gun.streamAt=now;damage*=1+Math.min(.9,gun.streamHits*.055);
+    target.wetUntil=now+1800;createChaosBurst(targetCenter(target),[0xff4fba,0x50e5ff,0xffc857,0x77ff8f],3,2.5);
+    const direction=new THREE.Vector3();camera.getWorldDirection(direction);for(const explosive of thrownExplosives)if(explosive.group.position.distanceTo(targetCenter(target))<8)explosive.velocity.addScaledVector(direction,5);
+    if(gun.streamHits>=14){gun.streamHits=0;createPulseBlast(targetCenter(target),9,0xfff2ff);createChaosBurst(targetCenter(target),[0xff4fba,0x50e5ff,0xffc857,0x77ff8f],28,11);ui.status.textContent='UNICORN SPRINKLER // RAINBOW SHOCKWAVE';}
+  }
   return damage;
 }
 
@@ -1901,6 +2092,10 @@ function prismSplitImpact(point,gun) {
   if (!target) return; addBeam(point,targetCenter(target),0xe778ff,110); target.lastDamagingGun=gun; damageTarget(target,Math.max(7,Math.round(gun.damage*.55)));
 }
 
+function bubbleTeaBounceImpact(hit,gun) {
+  if(!hit.face)return;const incoming=new THREE.Vector3();camera.getWorldDirection(incoming);const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);const reflected=incoming.reflect(normal).normalize();const origin=hit.point.clone().addScaledVector(reflected,.1);const bounceRay=new THREE.Raycaster(origin,reflected,0,36);const bounce=bounceRay.intersectObjects([...activeShootables(),...activeOccluders()],false)[0];const end=bounce?.point.clone()||origin.clone().addScaledVector(reflected,18);addBeam(hit.point,end,[0x3a263f,0xff75c8,0x65eaff][Math.floor(Math.random()*3)],130);const target=bounce?.object.userData.target;if(target?.alive){target.lastDamagingGun=gun;damageTarget(target,Math.max(6,Math.round(gun.damage*.55)));target.bobaHits=(target.bobaHits||0)+1;}createChaosBurst(hit.point,[0x3a263f,0xff75c8,0x65eaff],5,3);
+}
+
 function addBeam(from, to, color, duration = 130) {
   const geometry = new THREE.BufferGeometry().setFromPoints([from, to]);
   const beam = new THREE.Line(geometry, new THREE.LineBasicMaterial({ color, transparent:true, opacity:.95 }));
@@ -1928,6 +2123,42 @@ function fireExperimental(gun) {
   if (gun.effect === 'mirrorDrone') deployMirrorDrones();
   if (gun.effect === 'phaseBeacon') usePhaseBeacon(gun);
   if (gun.effect === 'ammoSynth') deployAmmoSynth(gun);
+  if (gun.effect === 'gnomeTurret') deployGnomeTurret(gun);
+}
+
+function createSillyField(point,gun,special,radius=5) {
+  const placed=point.clone();placed.y=groundHeightAt(placed.x,placed.z)+.09;createUtilityField(placed,{...gun,special,blastRadius:radius,color:special==='mustardTrail'?0xffd83d:special==='unicornTrail'?0xff75d1:special==='toastSmoke'?0x757575:gun.color});
+}
+
+function createBananaPeel(point,gun) {
+  const placed=point.clone();placed.y=groundHeightAt(placed.x,placed.z)+.08;const group=new THREE.Group();group.position.copy(placed);world.add(group);const material=new THREE.MeshStandardMaterial({color:0xffdf32,emissive:0x7d5800,emissiveIntensity:.18,side:THREE.DoubleSide,roughness:.75});
+  for(let index=0;index<3;index++){const peel=new THREE.Mesh(new THREE.ConeGeometry(.12,.68,5,1,true),material.clone());peel.rotation.set(Math.PI/2,index*Math.PI*2/3,index%2?.32:-.32);peel.position.set(Math.cos(index*Math.PI*2/3)*.16,.03,Math.sin(index*Math.PI*2/3)*.16);group.add(peel);}
+  bananaPeels.push({group,gun,expires:performance.now()+18000,armedAt:performance.now()+350});while(bananaPeels.length>18){const old=bananaPeels.shift();world.remove(old.group);old.group.traverse(child=>{child.geometry?.dispose();child.material?.dispose();});}
+}
+
+function deployGnomeTurret(gun) {
+  const direction=new THREE.Vector3();camera.getWorldDirection(direction);direction.y=0;direction.normalize();const point=state.position.clone().addScaledVector(direction,2.5);point.y=groundHeightAt(point.x,point.z)+.65;
+  const group=new THREE.Group();group.position.copy(point);world.add(group);const body=new THREE.Mesh(new THREE.CylinderGeometry(.28,.38,.75,10),new THREE.MeshStandardMaterial({color:0x3483d5,roughness:.65}));group.add(body);const face=new THREE.Mesh(new THREE.SphereGeometry(.27,12,9),new THREE.MeshStandardMaterial({color:0xffd3ac,roughness:.8}));face.position.y=.48;group.add(face);const hat=new THREE.Mesh(new THREE.ConeGeometry(.34,.82,10),new THREE.MeshStandardMaterial({color:0xff334b,emissive:0x781020,emissiveIntensity:.18}));hat.position.y=1.02;group.add(hat);const muzzle=new THREE.PointLight(0xffc857,0,5);muzzle.position.set(0,.52,-.34);group.add(muzzle);
+  gnomeTurrets.push({group,gun,muzzle,health:70,arena:state.activeArena,nextShot:performance.now()+500,nextShout:performance.now()+900,expires:performance.now()+15000,refundable:true});while(gnomeTurrets.length>4)removeGnomeTurret(gnomeTurrets[0]);ui.status.textContent='GARDEN GNOME // ANGRY TURRET DEPLOYED';
+}
+
+function removeGnomeTurret(gnome) {const index=gnomeTurrets.indexOf(gnome);if(index>=0)gnomeTurrets.splice(index,1);world.remove(gnome.group);gnome.group.traverse(child=>{child.geometry?.dispose();child.material?.dispose();});}
+
+function launchShoppingCart(gun) {
+  const direction=new THREE.Vector3();camera.getWorldDirection(direction);const group=new THREE.Group();group.position.copy(camera.position).addScaledVector(direction,1.2);world.add(group);const basket=new THREE.Mesh(new THREE.BoxGeometry(1.1,.68,1.35),new THREE.MeshStandardMaterial({color:0x9aa8b7,metalness:.8,roughness:.25,wireframe:true}));group.add(basket);for(const x of [-.42,.42])for(const z of [-.42,.42]){const wheel=new THREE.Mesh(new THREE.TorusGeometry(.13,.045,7,12),mats.black);wheel.position.set(x,-.42,z);wheel.rotation.y=Math.PI/2;group.add(wheel);}
+  shoppingCarts.push({group,gun,velocity:direction.multiplyScalar(33).add(new THREE.Vector3(0,3,0)),spawned:performance.now(),expires:performance.now()+6500,collected:0,hit:new Set()});chaosSound('crunch',72,1.2);ui.status.textContent='SHOPPING CART // AISLE CLEAR';
+}
+
+function updateChaosSystems(dt) {
+  const now=performance.now();
+  for(const particle of [...chaosParticles]){particle.life-=dt;particle.velocity.y-=9*dt;particle.mesh.position.addScaledVector(particle.velocity,dt);particle.mesh.rotation.x+=dt*7;particle.mesh.rotation.z+=dt*5;particle.mesh.material.opacity=Math.max(0,particle.life*1.4);if(particle.life>0)continue;world.remove(particle.mesh);particle.mesh.geometry.dispose();particle.mesh.material.dispose();chaosParticles.splice(chaosParticles.indexOf(particle),1);}
+  for(const peel of [...bananaPeels]){peel.group.rotation.y+=dt*.8;if(now>=peel.armedAt){const victim=enemies.find(enemy=>enemy.alive&&enemy.arena===state.activeArena&&enemy.group.position.distanceTo(peel.group.position)<1.25);if(victim){victim.stunnedUntil=now+750;victim.slowUntil=now+1700;pushTarget(victim,new THREE.Vector3(Math.sin(now),0,Math.cos(now)),7);createChaosBurst(peel.group.position,[0xffdf32,0xffffff],14,7);chaosSound('squeak',310,1.1);peel.expires=0;ui.status.textContent='BANANA PEEL // HOSTILE SLIPPED';}}
+    if(now<peel.expires)continue;world.remove(peel.group);peel.group.traverse(child=>{child.geometry?.dispose();child.material?.dispose();});bananaPeels.splice(bananaPeels.indexOf(peel),1);}
+  for(const gnome of [...gnomeTurrets]){gnome.muzzle.intensity=THREE.MathUtils.damp(gnome.muzzle.intensity,0,22,dt);const target=enemies.filter(enemy=>enemy.alive&&enemy.arena===state.activeArena&&enemy.group.position.distanceTo(gnome.group.position)<42).sort((a,b)=>a.group.position.distanceTo(gnome.group.position)-b.group.position.distanceTo(gnome.group.position))[0];if(target){const look=target.group.position.clone();look.y=gnome.group.position.y;gnome.group.lookAt(look);if(now>=gnome.nextShot){gnome.nextShot=now+720;gnome.muzzle.intensity=8;addBeam(gnome.group.position.clone().add(new THREE.Vector3(0,.55,0)),targetCenter(target),0xffc857,120);target.lastDamagingGun=gnome.gun;damageTarget(target,gnome.gun.damage);createChaosBurst(targetCenter(target),[0xffc857,0xff334b],4,3);}}if(now>=gnome.nextShout){gnome.nextShout=now+2500;chaosSound('squeak',180+Math.random()*100,.65);}if(now<gnome.expires&&gnome.health>0)continue;createChaosBurst(gnome.group.position,[0xff334b,0x3483d5,0xffffff],18,8);removeGnomeTurret(gnome);}
+  for(const cart of [...shoppingCarts]){cart.velocity.y-=15*dt;const next=cart.group.position.clone().addScaledVector(cart.velocity,dt);const floor=groundHeightAt(next.x,next.z)+.55;if(next.y<=floor){next.y=floor;if(cart.velocity.y< -4&&Math.hypot(cart.velocity.x,cart.velocity.z)>18)cart.velocity.y=5;else cart.velocity.y=0;cart.velocity.x*=.992;cart.velocity.z*=.992;}if(pointInsideActiveCollider(next)){cart.velocity.x*=-.35;cart.velocity.z*=-.35;createChaosBurst(next,[0xaeb8c2,0xffc857],10,5);}cart.group.position.copy(next);cart.group.rotation.x+=dt*3.4;const age=Math.min(1,(now-cart.spawned)/900);cart.group.scale.setScalar(.35+age*1.25);
+    for(const peel of [...bananaPeels])if(peel.group.position.distanceTo(cart.group.position)<1.8){cart.collected++;peel.expires=0;createChaosBurst(peel.group.position,[0xffdf32],6,4);}
+    for(const target of [...dummies,...enemies])if(target.alive&&target.arena===state.activeArena&&!cart.hit.has(target)&&targetCenter(target).distanceTo(cart.group.position)<1.65){cart.hit.add(target);target.lastDamagingGun=cart.gun;damageTarget(target,cart.gun.damage+cart.collected*18);pushTarget(target,cart.velocity,10+cart.collected*2);createChaosBurst(targetCenter(target),[0xaeb8c2,0xffc857,0xff4fba],20,10);chaosSound('crunch',68,1.4);}
+    if(now<cart.expires&&Math.abs(cart.group.position.x)<345&&Math.abs(cart.group.position.z)<345)continue;world.remove(cart.group);cart.group.traverse(child=>{child.geometry?.dispose();child.material?.dispose();});shoppingCarts.splice(shoppingCarts.indexOf(cart),1);}
 }
 
 function fireMelee(gun) {
@@ -2083,13 +2314,21 @@ function updateUtilitySystems(dt) {
     if(now>=wall.expires) removeHardlightWall(wall);
   }
   for (const field of [...utilityFields]) {
-    field.ring.rotation.z+=dt*.6; field.ring.material.opacity=.16+Math.sin(now*.008)*.1;
+    field.ring.rotation.z+=dt*(field.gun.special==='discoBall'?3.8:.6); field.ring.material.opacity=.16+Math.sin(now*.008)*.1;
     const playerInside=Math.hypot(state.position.x-field.point.x,state.position.z-field.point.z)<=field.radius;
     if (field.gun.special==='resonanceDisc' && now>=field.nextPulse && field.pulses<3) {
       field.nextPulse=now+850; field.pulses++; field.ring.scale.setScalar(.65); setTimeout(()=>field.ring?.scale.setScalar(1),120);
       for(const enemy of enemies) if(enemy.alive&&enemy.group.position.distanceTo(field.point)<=field.radius){enemy.slowUntil=now+1400;enemy.pingedUntil=now+1800;}
     }
     if (field.gun.special==='muteGrenade' && playerInside) state.mutedUntil=now+180;
+    if (field.gun.special==='redHerring' && playerInside) state.mutedUntil=now+220;
+    if(field.gun.special==='discoBall'){
+      if(playerInside)state.speedBoostUntil=Math.max(state.speedBoostUntil,now+240);
+      if(now>=field.nextPulse){field.nextPulse=now+620;field.pulses++;const color=[0xff4fba,0x50e5ff,0xffc857,0xe7ff57][field.pulses%4];createPulseBlast(field.point,field.radius,color);for(const enemy of enemies)if(enemy.alive&&enemy.arena===state.activeArena&&enemy.group.position.distanceTo(field.point)<=field.radius)enemy.pingedUntil=now+1200;}
+    }
+    if(field.gun.special==='bubblePuddle')for(const target of [...dummies,...enemies])if(target.alive&&target.group.position.distanceTo(field.point)<=field.radius)target.slowUntil=now+240;
+    if(field.gun.special==='mustardTrail')for(const target of [...dummies,...enemies])if(target.alive&&target.group.position.distanceTo(field.point)<=field.radius){target.slowUntil=now+260;if(!field.launched.has(target)){field.launched.set(target,true);pushTarget(target,new THREE.Vector3(Math.sin(now),0,Math.cos(now)),5);}}
+    if(field.gun.special==='unicornTrail'&&playerInside)state.speedBoostUntil=Math.max(state.speedBoostUntil,now+260);
     if (field.gun.special==='updraft') {
       if(playerInside){state.velocity.y=Math.max(state.velocity.y,13);state.onGround=false;state.impulseUntil=now+300;}
       for(const enemy of enemies) if(enemy.alive&&enemy.group.position.distanceTo(field.point)<=field.radius){
@@ -2102,7 +2341,8 @@ function updateUtilitySystems(dt) {
       for(const target of [...dummies,...enemies]) if(target.alive&&target.group.position.distanceTo(field.point)<=field.radius) target.health=Math.min(target.kind==='enemy'?140:100,target.health+6*dt);
     }
     if(now<field.expires) continue;
-    field.launched.forEach((baseY,target)=>{if(target.alive) target.group.position.y=baseY;});
+    if(field.gun.special==='discoBall'&&!field.finale){field.finale=true;createChaosBurst(field.point,[0xff4fba,0x50e5ff,0xffc857,0xe7ff57],30,12);createPulseBlast(field.point,field.radius,0xffffff);for(const target of [...dummies,...enemies])if(target.alive&&target.group.position.distanceTo(field.point)<=field.radius){target.lastDamagingGun=field.gun;damageTarget(target,field.gun.damage||52);}chaosSound('pop',330,1.7);}
+    if(field.gun.special==='updraft')field.launched.forEach((baseY,target)=>{if(target.alive) target.group.position.y=baseY;});
     world.remove(field.group); field.group.traverse(child=>{child.geometry?.dispose();child.material?.dispose();}); utilityFields.splice(utilityFields.indexOf(field),1);
   }
   for (const synth of [...ammoSynths]) {
@@ -2326,7 +2566,8 @@ function reload() {
   const gun = loadout[state.weaponIndex];
   if (state.reloading || gun.ammo === gun.magSize || gun.reserve === 0 || state.completed || state.dead) return;
   setAiming(false);
-  state.reloading = true; ui.status.textContent = `RELOADING // ${gun.name}`; weapon.rotation.z = -.35; weapon.position.y = -.63;
+  const sillyReloads={pizzaParty:'FRESH PIZZA // DELIVERY BOX LOADED',redFish:'FISHBOWL DIP // WATER REFILLED',toaster:'TWO SLICES // PUSHED DOWN',baguette:'PAPER WRAP // FRESH BAGUETTE',bananaPeel:'SIX TINY BANANAS // CYLINDER LOADED',bubbleTea:'GIANT STRAW // INSERTED',sockPuppet:'COLORFUL BUTTONS // FED',condiments:'KETCHUP + MUSTARD // SHAKE SHAKE'};
+  state.reloading = true; ui.status.textContent = sillyReloads[gun.special]||`RELOADING // ${gun.name}`; weapon.rotation.z = -.35; weapon.position.y = -.63;if(gun.category==='SILLY')chaosSound('pop',180,.65);
   const reloadDuration = gun.reloadTime * (performance.now() < state.velocityBoostUntil ? .75 : 1);
   state.reloadTimer = setTimeout(() => {
     const needed = gun.magSize - gun.ammo; const amount = Math.min(needed, gun.reserve);
@@ -2626,7 +2867,7 @@ function renderLobbySummary() {
 function featuredRange(gun) { return gun.scoped?'LONG':gun.weaponClass.includes('SHOTGUN')||gun.effect==='melee'?'CLOSE':gun.range&&gun.range<30?'CLOSE':'MID'; }
 function renderFeaturedWeapon() {
   if (!ui.featured?.name) return;
-  const gun=loadout[featuredWeaponIndex]; const owned=progress.unlocked.has(gun.id); const price=directPrice(gun); const familyColors={NORMAL:'#6bbcff',WEIRD:'#50e5ff',CRAZY:'#ff5a35',CUSTOM:'#b58aff',GEAR:'#67e8a5'};
+  const gun=loadout[featuredWeaponIndex]; const owned=progress.unlocked.has(gun.id); const price=directPrice(gun); const familyColors={NORMAL:'#6bbcff',WEIRD:'#50e5ff',CRAZY:'#ff5a35',CUSTOM:'#b58aff',SILLY:'#ff67c9',GEAR:'#67e8a5'};
   ui.featured.panel.style.setProperty('--family',familyColors[gun.category]||'#50e5ff'); ui.featured.className.textContent=`${gun.category} // ${gun.weaponClass}`; ui.featured.name.textContent=gun.name; ui.featured.description.textContent=gun.trait||gun.weaponClass;
   ui.featured.damage.textContent=gun.damage; ui.featured.rate.textContent=gun.automatic?Math.round(60000/gun.fireRate):'SEMI'; ui.featured.mag.textContent=gun.magSize; ui.featured.range.textContent=featuredRange(gun);
   ui.featured.price.textContent=owned?'OWNED':`◆${price}`; ui.featured.buy.textContent=owned?'EQUIP':'BUY'; ui.featured.buy.classList.toggle('cant-afford',!owned&&progress.cash<price);
@@ -2649,7 +2890,7 @@ function announceCrate(message) {
 
 function renderLobbyShop() {
   ui.lobbyShopGrid.replaceChildren();
-  loadout.filter(gun => activeShopFilter === 'all' || shopType(gun) === activeShopFilter).forEach(gun => {
+  loadout.filter(gun => activeShopFilter === 'all' || activeShopFilter==='silly'&&gun.category==='SILLY' || shopType(gun) === activeShopFilter).forEach(gun => {
     const owned = progress.unlocked.has(gun.id);
     const price = directPrice(gun);
     const card = document.createElement('article');
@@ -2850,27 +3091,29 @@ ui.closeReward.addEventListener('click', () => {
 });
 
 function updateLootInteraction() {
-  state.nearestLoot = null; state.nearestWire = null;
+  state.nearestLoot = null; state.nearestWire = null; state.nearestGnome=null;
   let nearestDistance = 4.2;
   for (const crate of lootCrates) {
     if (crate.opened || crate.arena!==state.activeArena) continue;
     const distance = crate.group.position.distanceTo(state.position);
     if (distance < nearestDistance) { nearestDistance = distance; state.nearestLoot = crate; }
   }
-  if (!state.nearestLoot) {
+  if(!state.nearestLoot){let gnomeDistance=3.2;for(const gnome of gnomeTurrets){if(!gnome.refundable||gnome.arena!==state.activeArena)continue;const distance=gnome.group.position.distanceTo(state.position);if(distance<gnomeDistance){gnomeDistance=distance;state.nearestGnome=gnome;}}}
+  if (!state.nearestLoot&&!state.nearestGnome) {
     let wireDistance=3.2;
     for (const wire of activeWires) {
       const distance=pointToSegmentDistance(state.position,wire.a.point,wire.b.point);
       if (distance<wireDistance) { wireDistance=distance; state.nearestWire=wire; }
     }
   }
-  const visible = Boolean((state.nearestLoot || state.nearestWire) && state.started && !state.dead && !state.armoryOpen);
+  const visible = Boolean((state.nearestLoot || state.nearestGnome || state.nearestWire) && state.started && !state.dead && !state.armoryOpen);
   ui.interaction.classList.toggle('show', visible);
-  ui.interaction.innerHTML = visible ? state.nearestLoot ? '<kbd>F</kbd> SEARCH WEAPON CRATE' : '<kbd>F</kbd> RIDE WIRE ZIPLINE' : '';
+  ui.interaction.innerHTML = visible ? state.nearestLoot ? '<kbd>F</kbd> SEARCH WEAPON CRATE' : state.nearestGnome ? '<kbd>F</kbd> PICK UP GNOME (+1)' : '<kbd>F</kbd> RIDE WIRE ZIPLINE' : '';
 }
 
 function searchNearbyLoot() {
   const crate = state.nearestLoot;
+  if(!crate&&state.nearestGnome){const gnome=state.nearestGnome;gnome.gun.ammo=Math.min(gnome.gun.magSize,gnome.gun.ammo+1);updateAmmo();removeGnomeTurret(gnome);state.nearestGnome=null;ui.status.textContent='GNOME RECOVERED // CHARGE REFUNDED';chaosSound('pop',280,.8);return;}
   if (!crate && state.nearestWire) { useWireZipline(state.nearestWire); return; }
   if (!crate || crate.opened || state.dead || state.armoryOpen) return;
   crate.opened = true; crate.lid.rotation.x = -.65; crate.lid.position.set(0, 1.35, -.38); crate.glow.intensity = 0; crate.core.visible = false; crate.ring.visible = false;
@@ -2903,9 +3146,10 @@ function renderArmory() {
     if (gun.category === 'GEAR') return;
     if (gun.category !== activeCategory) {
       activeCategory = gun.category;
+      let categoryEnd=index;while(categoryEnd+1<loadout.length&&loadout[categoryEnd+1].category===gun.category)categoryEnd++;
       const heading = document.createElement('div');
       heading.className = `armory-section-title category-${gun.category.toLowerCase()}`;
-      heading.innerHTML = `<span>${String(index + 1).padStart(2, '0')}—${String(index + 10).padStart(2, '0')}</span><b>${gun.category} WEAPONS</b>`;
+      heading.innerHTML = `<span>${String(index + 1).padStart(2, '0')}—${String(categoryEnd + 1).padStart(2, '0')}</span><b>${gun.category} WEAPONS</b>`;
       ui.armoryGrid.append(heading);
     }
     const owned = progress.unlocked.has(gun.id);
@@ -3049,9 +3293,11 @@ function updateEnemies(time, dt) {
     if (now < (enemy.stunnedUntil || 0) || now < (enemy.pinnedUntil || 0)) continue;
     const speedScale = now < (enemy.slowUntil || 0) ? .45 : 1;
     const decoy = activeDecoys.filter(item => item.arena === state.activeArena).sort((a,b) => a.group.position.distanceTo(enemy.group.position) - b.group.position.distanceTo(enemy.group.position))[0];
-    const decoyDistance = decoy ? decoy.group.position.distanceTo(enemy.group.position) : Infinity;
-    const targetingDecoy = decoyDistance < 135;
-    const targetPoint = targetingDecoy ? decoy.group.position.clone().add(new THREE.Vector3(0,2.7,0)) : state.position.clone();
+    const herring=thrownExplosives.filter(item=>item.gun.special==='redHerring').sort((a,b)=>a.group.position.distanceTo(enemy.group.position)-b.group.position.distanceTo(enemy.group.position))[0];
+    const gnome=gnomeTurrets.filter(item=>item.health>0).sort((a,b)=>a.group.position.distanceTo(enemy.group.position)-b.group.position.distanceTo(enemy.group.position))[0];
+    const distractions=[decoy&&{kind:'decoy',item:decoy,distance:decoy.group.position.distanceTo(enemy.group.position)},herring&&{kind:'herring',item:herring,distance:herring.group.position.distanceTo(enemy.group.position)},gnome&&{kind:'gnome',item:gnome,distance:gnome.group.position.distanceTo(enemy.group.position)}].filter(Boolean).sort((a,b)=>a.distance-b.distance);
+    const diversion=distractions[0]?.distance<150?distractions[0]:null;const targetingDecoy=Boolean(diversion);
+    const targetPoint = diversion ? diversion.item.group.position.clone().add(new THREE.Vector3(0,diversion.kind==='decoy'?2.7:.5,0)) : state.position.clone();
     const delta = targetPoint.clone().sub(enemy.group.position); delta.y = 0;
     const distance = delta.length();
     const heldWeapon=loadout[state.weaponIndex];
@@ -3077,7 +3323,7 @@ function updateEnemies(time, dt) {
         if(!targetingDecoy) state.lastEnemyShotAt=now;
         const accuracy = THREE.MathUtils.clamp(.82 - distance / 230, .28, .72);
         if (Math.random() < accuracy) {
-          if (targetingDecoy) { enemy.pingedUntil = now + 3000; ui.status.textContent = 'DECOY HIT // HOSTILE PINGED 3S'; }
+          if (targetingDecoy) { enemy.pingedUntil = now + 3000;if(diversion.kind==='gnome'){diversion.item.health-=18;ui.status.textContent='GNOME UNDER FIRE // HOSTILE DISTRACTED';}else if(diversion.kind==='herring'){ui.status.textContent='RED HERRING // HOSTILE TOOK THE BAIT';}else ui.status.textContent = 'DECOY HIT // HOSTILE PINGED 3S'; }
           else damagePlayer(7 + Math.floor(Math.random() * 7));
         }
       }
@@ -3229,7 +3475,7 @@ function updateRegeneratingAmmo(now) {
 }
 
 function updateExperimentalSystems(dt) {
-  updateAcousticWaves(dt); updateMagnetLinks(); updateWireTraps(); updateThrownExplosives(dt); updateThrowTrajectory(); updateUtilitySystems(dt);
+  updateAcousticWaves(dt); updateMagnetLinks(); updateWireTraps(); updateThrownExplosives(dt); updateThrowTrajectory(); updateUtilitySystems(dt); updateChaosSystems(dt);
   const now=performance.now();for(const mark of [...fractureMarks]){mark.mesh.rotation.x+=dt*2.2;mark.mesh.rotation.y+=dt*3.1;mark.mesh.material.opacity=.55+Math.sin(now*.012)*.32;if(now>=mark.expires||mark.target&&!mark.target.alive)removeFractureMark(mark);}
 }
 

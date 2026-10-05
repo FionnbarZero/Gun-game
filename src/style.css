@@ -112,6 +112,7 @@ button { font: inherit; }
 .armory-section-title.category-weird { color:#62d9ff; }
 .armory-section-title.category-crazy { color:#ff6338; }
 .armory-section-title.category-custom { color:#b786ff; }
+.armory-section-title.category-silly { color:#ff67c9; text-shadow:0 0 14px rgba(255,103,201,.5); border-image:linear-gradient(90deg,#ff4fba,#50e5ff,#ffc857,#e7ff57) 1; }
 .weapon-card h3 { font-size:19px; line-height:1; }
 .weapon-card .card-class { letter-spacing:.14em; }
 
@@ -158,6 +159,7 @@ button { font: inherit; }
 .lobby-card { position:relative; min-height:116px; padding:13px; border:1px solid rgba(255,255,255,.12); background:linear-gradient(145deg,rgba(31,40,66,.9),rgba(11,15,29,.94)); color:var(--paper); overflow:hidden; }
 .lobby-card:before { content:""; position:absolute; top:0; right:0; bottom:0; width:3px; background:var(--cyan); }
 .lobby-card.weird:before { background:var(--violet); }.lobby-card.crazy:before { background:var(--pink); }.lobby-card.custom:before { background:var(--gold); }
+.lobby-card.silly{background:radial-gradient(circle at 88% 12%,rgba(255,200,87,.16),transparent 30%),linear-gradient(145deg,rgba(67,27,82,.92),rgba(12,28,51,.95));}.lobby-card.silly:before{background:linear-gradient(#ff4fba,#50e5ff,#ffc857,#e7ff57)}.lobby-card.silly h3{color:#fff5bf;text-shadow:0 0 12px rgba(255,79,186,.28)}
 .lobby-card small { color:#78849a; font:500 7px "DM Mono",monospace; letter-spacing:.15em; }
 .lobby-card h3 { min-height:34px; margin:8px 0 12px; font-size:17px; line-height:1; letter-spacing:.03em; }
 .lobby-card footer { display:flex; align-items:center; justify-content:space-between; gap:8px; }
@@ -184,6 +186,7 @@ button { font: inherit; }
 .shop-filters { display:flex; gap:6px; padding:9px 1px 1px; }
 .shop-filters button { height:28px; padding:0 14px; border:1px solid #3c4861; background:rgba(8,13,27,.86); color:#738098; cursor:pointer; font:600 8px "DM Mono",monospace; letter-spacing:.12em; }
 .shop-filters button:hover { color:white; border-color:#73829e; }.shop-filters button.active{color:#081018;border-color:var(--cyan);background:var(--cyan)}
+.shop-filters button[data-shop-filter="silly"]{border-image:linear-gradient(90deg,#ff4fba,#50e5ff,#ffc857) 1}.shop-filters button[data-shop-filter="silly"].active{color:#13071b;background:linear-gradient(90deg,#ff4fba,#50e5ff,#ffc857);border-color:transparent}
 .lobby-loadout { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:12px 0; }
 .loadout-slot { min-height:76px; padding:11px 13px; border:1px solid rgba(255,255,255,.16); background:rgba(12,18,37,.88); color:#919baf; text-align:left; cursor:pointer; }
 .loadout-slot.active { border-color:var(--cyan); background:linear-gradient(135deg,rgba(80,229,255,.14),rgba(155,108,255,.12)); box-shadow:inset 0 -2px var(--cyan); color:white; }

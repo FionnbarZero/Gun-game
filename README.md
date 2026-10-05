@@ -14,10 +14,11 @@ Damaging targets, landing long-range sniper shots, defeating enemies, and comple
 - 10 role-locked Secondary weapons — one-handed pistols with tracking, chaining, knockback, echo fire, and finisher bonuses
 - 10 role-locked Melee weapons — momentum blades, grappling hooks, shockwave hammers, launch axes, whips, and timed deflection
 - 10 role-locked Other items — pulse discs, bullet barriers, stealth zones, polarity snares, updrafts, decoys, healing clouds, remote charges, return beacons, and ammo fabrication
+- 15 Silly/Chaos weapons — ricochet pizzas, charged fish, AI-bait herrings, tactical toast, breadstick sniping, screaming rail-chickens, banana traps, disco scan fields, healing cake blasts, sticky boba, recoverable gnome turrets, lint disruption, condiment combos, growing shopping carts, and rainbow speed trails
 - Glassline Sniper — repeat-hit crystalline marks, immediate headshot shatters, and surface fractures that burst through nearby cover
 - Comet Shorty — a two-shell compact shotgun whose recoil can vault the player upward or add forward escape momentum
 
-Scoped weapons use a dedicated precision mode with magnified FOV, reduced look sensitivity, greatly reduced shot spread, and bonus Resonance payouts for hits beyond 60 meters—especially headshots. Several prototype weapons also use specialized systems already active in the arena: piercing beams, explosive splash damage, ricocheting acoustic projectiles, recoil propulsion, magnet links, and wire traps/zip-lines. The expanded arsenal brings the vault to 82 weapon blueprints, plus the starter utility kit.
+Scoped weapons use a dedicated precision mode with magnified FOV, reduced look sensitivity, greatly reduced shot spread, and bonus Resonance payouts for hits beyond 60 meters—especially headshots. Several prototype weapons also use specialized systems already active in the arena: piercing beams, explosive splash damage, ricocheting acoustic projectiles, recoil propulsion, magnet links, and wire traps/zip-lines. The Silly/Chaos family uses the same real combat systems for charge shots, physical throwables, AI distraction, reveal fields, traps, knockback, healing, and movement boosts. Golden Pizza, Radioactive Fish, Galaxy Chicken, Diamond Toaster, and Strawberry Bubble Tea finishes can drop from the existing earned-credit cases. The expanded arsenal brings the vault to 97 weapon blueprints, plus the starter utility kit.
 
 The lobby now opens with a full three-card map vote and an eight-second tally. Vertigo Grid has two elevated outer Spines, a Sunken Nexus with five rising data blocks, three tall Spires, rooftop bridges, and vertical launch pads. Overgrown Outpost has a river-cut Ravine, sightline-blocking foliage, covered bunkers, an elevated Canopy network, a hollow covered Fallen Titan ramp, and angled Spore Pads. Industrial Foundry has parallel Assembly Line catwalks, three 15-second crane blockers, horizontal piston launchers, a roofed Ventilation Shaft flank, and a Smelter route with rotating platters that tip players into molten metal. Each map retains a recommended Other-slot utility.
 
@@ -47,8 +48,8 @@ Open the URL shown by Vite and select **Enter the Engine**.
 - `Q` / `E` — activate the two selected character abilities
 - Mouse wheel — cycle the four equipped slots
 - `R` — reload
-- `B` — open the 82-weapon vault
-- `F` — search a nearby crate or use a wire zip-line
+- `B` — open the 97-weapon vault
+- `F` — search a nearby crate, recover a surviving gnome turret, or use a wire zip-line
 - `H` — toggle hostile mode
 - `M` — switch arena
 - `Shift` — sprint
