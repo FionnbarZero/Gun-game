@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0c1115" />
+    <meta name="description" content="The Resonance Engine — a first-person sniper arena with eighty unlockable weapons." />
+    <title>The Resonance Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <canvas id="game" aria-label="The Resonance Engine 3D sniper game"></canvas>
+
+    <div id="hud" class="hidden" aria-hidden="true">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">RE</span><span>RESONANCE ENGINE</span></div>
+        <div class="objective"><span>SNIPER PROTOCOL</span><strong>OBSERVE // ZERO // TAKE THE SHOT</strong></div>
+        <div class="targets"><span>RANGE STATUS</span><strong><b id="targets-left">08</b> TARGETS // <b id="enemies-left">06</b> HOSTILES</strong></div>
+      </header>
+
+      <div id="crosshair" class="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
+      <div id="scope" class="scope" aria-hidden="true"><span class="scope-ring"></span><i class="scope-h"></i><i class="scope-v"></i><b>08× &nbsp; // &nbsp; HOLD BREATH</b></div>
+      <div id="hitmarker" class="hitmarker"><i></i><i></i><i></i><i></i></div>
+      <div id="damage-number" class="damage-number">34</div>
+
+      <aside class="radar-panel">
+        <div class="radar-head"><span>FIELD RADAR</span><b>700M</b></div>
+        <div id="radar" class="radar">
+          <span class="radar-ring ring-one"></span>
+          <span class="radar-ring ring-two"></span>
+          <span class="radar-axis axis-x"></span>
+          <span class="radar-axis axis-y"></span>
+          <span class="radar-player"></span>
+        </div>
+        <div class="radar-legend"><span><i></i> TARGET <i class="enemy-key"></i> HOSTILE</span><span>N ↑</span></div>
+      </aside>
+
+      <div id="prompt" class="prompt"></div>
+      <div id="interaction" class="interaction"></div>
+      <div id="status" class="status">RANGE LIVE</div>
+      <div class="match-clock"><span>TIME REMAINING</span><strong id="match-clock">05:00</strong></div>
+      <div class="arena-display"><span>ACTIVE ARENA</span><strong id="arena-name">THE CRUCIBLE BASIN</strong><small><kbd>M</kbd> SWITCH MAP</small></div>
+      <div id="mode-display" class="mode-display peaceful"><span>COMBAT STATE</span><strong id="mode-name">PEACEFUL</strong><small><kbd>H</kbd> TOGGLE HOSTILES</small></div>
+      <div class="cash-display"><span>RANGE CREDITS</span><strong>$<b id="cash">0000</b></strong><small><kbd>B</kbd> FIELD ARMORY</small></div>
+
+      <footer class="bottom-hud">
+        <div class="vitals">
+          <span class="label">OPERATOR</span>
+          <div class="health-line"><small>HP</small><strong id="health">100</strong><span><i id="health-bar"></i></span></div>
+          <div class="shield-line"><small>SHIELD</small><strong id="shield">50</strong><span><i id="shield-bar"></i></span></div>
+          <small>CONDITION // NOMINAL</small>
+        </div>
+        <div class="controls-hint"><kbd>WASD</kbd> MOVE <kbd>Q/E</kbd> ABILITIES <kbd>F</kbd> INTERACT <kbd>LMB</kbd> AIM <kbd>RMB</kbd> FIRE</div>
+        <div class="ammo">
+          <div><span id="ammo">30</span><b>/</b><strong id="reserve">120</strong></div>
+          <small><span id="weapon-name">SLEDGE BOLT-ACTION</span> // <span id="caliber">.338</span></small>
+          <small id="weapon-trait" class="weapon-trait">HEAVY SNIPER</small>
+        </div>
+      </footer>
+      <div class="weapon-switcher" aria-label="Weapon loadout">
+        <span id="weapon-slot-0" class="active"></span>
+        <span id="weapon-slot-1"></span>
+        <span id="weapon-slot-2"></span>
+        <span id="weapon-slot-3"></span>
+      </div>
+      <div class="ability-dock" aria-label="Equipped abilities">
+        <div class="ability-hud" data-ability-hud="q">
+          <div class="ability-key"><kbd>Q</kbd><i id="ability-cooldown-q"></i></div>
+          <div><small>ACTIVE ABILITY // Q</small><b id="ability-name-q">KINETIC SLINGSHOT</b><em id="ability-state-q">READY</em></div>
+        </div>
+        <div class="ability-hud" data-ability-hud="e">
+          <div class="ability-key"><kbd>E</kbd><i id="ability-cooldown-e"></i></div>
+          <div><small>ACTIVE ABILITY // E</small><b id="ability-name-e">THERMAL SNAPSHOT</b><em id="ability-state-e">READY</em></div>
+        </div>
+      </div>
+      <div id="passive-indicators" class="passive-indicators" aria-label="Active passive perks">
+        <small>PASSIVES ACTIVE</small><div></div>
+      </div>
+      <div id="camo-overlay" class="camo-overlay"></div>
+    </div>
+    <div id="damage-flash" class="damage-flash"></div>
+
+    <section id="countdown" class="countdown hidden" aria-live="assertive">
+      <p>CONTRACT STARTING</p>
+      <strong id="countdown-number">3</strong>
+      <b>GET READY</b>
+    </section>
+
+    <section id="armory" class="armory hidden" aria-hidden="true">
+      <div class="armory-shell">
+        <header class="armory-head">
+          <div><p>RESONANCE ENGINE // 80 BLUEPRINTS</p><h2>WEAPON VAULT</h2></div>
+          <div class="armory-balance"><span>AVAILABLE CREDITS</span><strong>$<b id="armory-cash">0000</b></strong></div>
+          <button id="close-armory" type="button" aria-label="Close armory">CLOSE <kbd>B</kbd></button>
+        </header>
+        <div class="armory-note"><span>LAND SHOTS</span><i></i><span>EARN RESONANCE</span><i></i><span>UNLOCK BLUEPRINTS</span></div>
+        <div id="armory-grid" class="armory-grid"></div>
+        <footer class="armory-foot"><span>EQUIP HERE OR CYCLE OWNED WEAPONS WITH THE MOUSE WHEEL.</span><b>80 WEAPONS AVAILABLE</b></footer>
+      </div>
+    </section>
+
+    <section id="menu" class="menu">
+      <div class="grain"></div>
+      <div class="menu-grid"></div>
+      <div class="menu-top">
+        <div class="brand light"><span class="brand-mark">RE</span><span>RESONANCE ENGINE</span></div>
+        <div class="lobby-balance"><span>LOBBY CREDITS</span><strong>$<b id="lobby-cash">0000</b></strong></div>
+      </div>
+      <div id="lobby-play" class="menu-copy lobby-panel active" data-panel="play">
+        <div class="map-vote-head">
+          <div><p class="eyebrow">ARENA CONTROL // NEXT CONTRACT</p><h1>VOTE FOR <em>NEXT MAP</em></h1></div>
+          <div class="vote-mode"><small>GAME MODE</small><b>SOLO SNIPER CONTRACT</b><span>5:00 // HOSTILES OPTIONAL</span></div>
+        </div>
+        <div class="map-select" role="group" aria-label="Choose arena">
+          <button class="map-option active" data-map="0" type="button">
+            <span class="map-thumb vertigo"><i></i><i></i><i></i></span>
+            <span class="map-card-copy"><small>01 // SYNTHWAVE SKYLINE</small><b>VERTIGO GRID</b><em>STYLE: NEON GLASS</em><em>COMBAT: VERTICAL</em><strong>SPIRES // SPINES // NEXUS</strong></span>
+            <span class="vote-action">VOTE <b data-vote-count="0">3</b></span>
+          </button>
+          <button class="map-option" data-map="1" type="button">
+            <span class="map-thumb outpost"><i></i><i></i><i></i></span>
+            <span class="map-card-copy"><small>02 // RECLAIMED RESEARCH SITE</small><b>OVERGROWN OUTPOST</b><em>STYLE: RUINED JUNGLE</em><em>COMBAT: STEALTHY</em><strong>CANOPY // RAVINE // TITAN</strong></span>
+            <span class="vote-action">VOTE <b data-vote-count="1">1</b></span>
+          </button>
+          <button class="map-option" data-map="2" type="button">
+            <span class="map-thumb foundry"><i></i><i></i><i></i></span>
+            <span class="map-card-copy"><small>03 // ACTIVE INDUSTRIAL FLOOR</small><b>INDUSTRIAL FOUNDRY</b><em>STYLE: MECHANICAL</em><em>COMBAT: CHOKE-POINT</em><strong>CRANES // SMELTER // VENTS</strong></span>
+            <span class="vote-action">VOTE <b data-vote-count="2">2</b></span>
+          </button>
+        </div>
+        <div class="map-vote-foot">
+          <div class="map-intel"><small>RECOMMENDED OTHER</small><b id="map-utility">SHOCK MINE</b><span id="map-intel">Lock down rooftop launch exits while watching the glowing bridge lanes.</span></div>
+          <div class="vote-timer"><small>NEXT TALLY</small><b><span id="map-vote-timer">08</span>S</b></div>
+          <button id="deploy" type="button"><span>DEPLOY TO VOTED MAP</span><b>→</b></button>
+        </div>
+      </div>
+
+      <section id="lobby-shop" class="lobby-panel lobby-workspace" data-panel="shop">
+        <header><div><p>QUARTERMASTER // LIVE CATALOG</p><h2>WEAPON SHOP</h2></div><span>BUY BLUEPRINTS WITH CREDITS EARNED IN CONTRACTS.</span></header>
+        <div class="case-shop">
+          <article class="case-offer standard" data-case="standard">
+            <div class="crate-visual"><i></i><b>S</b></div>
+            <div><span>BASELINE FINISHES // CLEAN WRAPS</span><h3>STANDARD WEAPON CASE</h3><p>Matte sniper finishes, sidearm colors, utility wraps, and knife skins.</p></div>
+            <button data-buy-case="standard" data-cost="250" type="button"><span>BUY 1 CASE</span><b>$250</b></button>
+          </article>
+          <article class="case-offer elite" data-case="elite">
+            <div class="crate-visual"><i></i><b>H</b></div>
+            <div><span>ANIMATED NEON // CUSTOM MODELS</span><h3>HYPERSHOT ELITE CASE</h3><p>Vibrant skins, colored shot trails, and the rarest slot variants.</p></div>
+            <button data-buy-case="elite" data-cost="750" type="button"><span>BUY 1 CASE</span><b>$750</b></button>
+          </article>
+          <div class="case-odds"><span class="common">COMMON 70%</span><span class="rare">RARE 20%</span><span class="legendary">LEGENDARY 8.5%</span><span class="exotic">EXOTIC 1.5%</span></div>
+        </div>
+        <div id="crate-result" class="crate-result" aria-live="polite"></div>
+        <div id="shop-filters" class="shop-filters" role="group" aria-label="Shop category">
+          <button class="active" data-shop-filter="all" type="button">ALL</button>
+          <button data-shop-filter="primary" type="button">PRIMARY</button>
+          <button data-shop-filter="secondary" type="button">SECONDARY</button>
+          <button data-shop-filter="melee" type="button">MELEE</button>
+          <button data-shop-filter="extra" type="button">OTHER</button>
+        </div>
+        <div id="lobby-shop-grid" class="lobby-grid shop-grid"></div>
+      </section>
+
+      <section id="lobby-inventory" class="lobby-panel lobby-workspace" data-panel="inventory">
+        <header><div><p>OPERATOR // CUSTOM KIT</p><h2>INVENTORY</h2></div><span>SELECT A SLOT, THEN ASSIGN ANY OWNED WEAPON.</span></header>
+        <div id="lobby-loadout" class="lobby-loadout"></div>
+        <div class="cosmetic-shelf"><small>OWNED CASE REWARDS // SELECT TO EQUIP FOR THIS SLOT</small><div id="cosmetic-inventory"></div></div>
+        <div id="lobby-inventory-grid" class="lobby-grid inventory-grid"></div>
+      </section>
+
+      <section id="lobby-build" class="lobby-panel lobby-workspace build-workspace" data-panel="build">
+        <header><div><p>OPERATOR // ATTUNEMENT</p><h2>ABILITY BUILD</h2></div><span>EQUIP TWO ACTIVE SKILLS AND UP TO THREE ALWAYS-ON PASSIVES.</span></header>
+        <div class="build-columns">
+          <section><div class="build-label"><b>ACTIVE SKILLS</b><span>ASSIGN TO Q OR E</span></div><div class="ability-dock-picker" role="group" aria-label="Ability key to configure"><button class="active" data-ability-dock="q" type="button">Q SLOT</button><button data-ability-dock="e" type="button">E SLOT</button></div><div class="build-grid ability-grid">
+            <button data-ability="kinetic" type="button"><i>⟲</i><small>MOVEMENT // 9S COOLDOWN</small><b>KINETIC SLINGSHOT</b><p>Orbit a ledge at high speed, then release with all swing momentum intact.</p></button>
+            <button data-ability="snapshot" type="button"><i>◉</i><small>INTEL // 12S COOLDOWN</small><b>THERMAL SNAPSHOT</b><p>Reveal hostiles in a forward cone through walls for exactly four seconds.</p></button>
+            <button data-ability="nova" type="button"><i>✺</i><small>DEFENSE // 11S COOLDOWN</small><b>REPULSION NOVA</b><p>Blast nearby rushers away and deflect live explosives back outward.</p></button>
+            <button data-ability="rewind" type="button"><i>↶</i><small>TACTICAL // 18S COOLDOWN</small><b>QUANTUM REWIND</b><p>Place a five-second anchor; press again to return with your saved health.</p></button>
+            <button data-ability="grapple" type="button"><i>↗</i><small>MOMENTUM // 7S COOLDOWN</small><b>GRAPPLE SLINGSHOT</b><p>Tether geometry and accelerate into a momentum-preserving swing.</p></button>
+            <button data-ability="camo" type="button"><i>◌</i><small>ESCAPE // 14S COOLDOWN</small><b>TEMPORAL PHASE CAMO</b><p>Cloak for 3.5 seconds and move 20% faster. Primary fire is locked.</p></button>
+            <button data-ability="decoy" type="button"><i>♙</i><small>INTEL // 18S COOLDOWN</small><b>DECOY PROJECTION</b><p>Deploy a scoped hologram. Enemies that shoot it are pinged through walls.</p></button>
+          </div></section>
+          <section><div class="build-label"><b>PASSIVE ATTUNEMENTS</b><span>CHOOSE UP TO 3</span></div><div class="build-grid passive-grid">
+            <button data-passive="aero" type="button"><i>◇</i><small>AIRBORNE ACCURACY</small><b>AERO-STABILIZER</b><p>Removes the sniper hip-fire penalty while airborne.</p></button>
+            <button data-passive="velocity" type="button"><i>⚡</i><small>MOMENTUM HANDLING</small><b>VELOCITY CONVERSION</b><p>Launches, ramps, and slide-cancels boost reload and swapping by 25% for three seconds.</p></button>
+            <button data-passive="shadow" type="button"><i>◒</i><small>STEALTH MOVEMENT</small><b>SHADOW STEP</b><p>Move silently with melee equipped and evade tracking while sliding.</p></button>
+            <button data-passive="apex" type="button"><i>⌖</i><small>LONG-RANGE SUSTAIN</small><b>APEX PREDATOR</b><p>Long-range sniper eliminations immediately begin shield regeneration.</p></button>
+            <button data-passive="resilience" type="button"><i>⬡</i><small>SCOPED DEFENSE</small><b>TACTICAL RESILIENCE</b><p>Reduces camera flinch from incoming damage while scoped by 60%.</p></button>
+            <button data-passive="momentum" type="button"><i>↻</i><small>AMMO RECOVERY</small><b>MOMENTUM CONSERVATION</b><p>Launch pads and slide-cancel jumps refill one active sniper round.</p></button>
+            <button data-passive="lightweight" type="button"><i>»</i><small>FAST HANDLING</small><b>LIGHTWEIGHT FRAME</b><p>40% faster weapon readiness and a reduced enemy hearing radius.</p></button>
+            <button data-passive="rebound" type="button"><i>◎</i><small>SHIELD BREAK</small><b>REBOUND SHIELD</b><p>A kinetic shockwave pushes back and stuns nearby rushers.</p></button>
+          </div></section>
+        </div>
+      </section>
+
+      <nav class="lobby-nav" aria-label="Lobby navigation">
+        <button class="active" data-lobby-tab="play" type="button"><i>▶</i><span>PLAY<small>CHOOSE CONTRACT</small></span></button>
+        <button data-lobby-tab="shop" type="button"><i>◇</i><span>SHOP<small>UNLOCK WEAPONS</small></span></button>
+        <button data-lobby-tab="inventory" type="button"><i>▦</i><span>INVENTORY<small>EDIT LOADOUT</small></span></button>
+        <button data-lobby-tab="build" type="button"><i>✦</i><span>BUILD<small>ABILITY + PASSIVE</small></span></button>
+      </nav>
+      <div class="coordinates">36°10' N&nbsp;&nbsp;115°08' W<br />SECTOR // DUSTBOWL</div>
+      <div class="menu-art" aria-hidden="true"><span></span><i></i></div>
+    </section>
+
+    <section id="unboxing" class="unboxing hidden" aria-live="polite">
+      <div id="unbox-spinner" class="unbox-spinner">
+        <p>CASE PROTOCOL // RANDOMIZED DROP</p>
+        <h2>UNBOXING...</h2>
+        <div class="spinner-window"><i class="selector-needle"></i><div id="spinner-track" class="spinner-track"></div></div>
+        <div class="spinner-odds"><span>🟦 70%</span><span>🟪 20%</span><span>🟥 8.5%</span><span>🟨 1.5%</span></div>
+      </div>
+      <div id="unbox-reveal" class="unbox-reveal hidden">
+        <p>CONGRATULATIONS!</p>
+        <div id="reward-particles" class="reward-particles"></div>
+        <div id="reward-card" class="reward-card"><i id="reward-icon">◇</i><strong id="reward-name">REWARD</strong><small id="reward-slot">PRIMARY SKIN</small></div>
+        <b id="reward-rarity" class="reward-rarity">RARITY: COMMON</b>
+        <small id="reward-duplicate" class="reward-duplicate"></small>
+        <div><button id="equip-reward" type="button">EQUIP ITEM</button><button id="close-reward" type="button">CONTINUE</button></div>
+      </div>
+    </section>
+
+    <section id="complete" class="complete hidden">
+      <p>EXERCISE COMPLETE</p>
+      <h2 id="complete-title">RANGE<br />CLEARED</h2>
+      <div><span>ACCURACY <b id="accuracy">100%</b></span><span>ROUNDS <b id="rounds">0</b></span></div>
+      <button id="restart" type="button">RUN IT AGAIN <b>↻</b></button>
+    </section>
+
+    <section id="death" class="death hidden">
+      <p>OPERATOR DOWN</p>
+      <h2>MISSION<br />FAILED</h2>
+      <div><span>HOSTILES DROPPED <b id="death-kills">0</b></span><span>CREDITS BANKED <b id="death-cash">$0</b></span></div>
+      <button id="redeploy" type="button">REDEPLOY <b>→</b></button>
+    </section>
+
+    <div id="rotate-notice" class="rotate-notice">ROTATE YOUR DEVICE<br /><small>LANDSCAPE MODE REQUIRED</small></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
