@@ -26,6 +26,20 @@ The lobby Build tab lets each operator equip two active abilities on `Q` and `E`
 
 The Play panel includes an interactive tactical map hologram with known sniper, launch, flank, and hazard landmarks. The Lobby Firing Range is a returnable practice session with 25 m, 60 m, and 100 m target distances, optional moving targets, accuracy, eliminations, and fastest-clear timing; leaving it returns directly to the lobby instead of starting a contract. The Challenges panel rotates three deterministic local contracts at local midnight and includes a persistent trophy wall. The local profile records earned credits, eliminations, headshots, longest confirmed shot, fastest range clear, completed contracts, weapon use, and ability use. Settings persist audio levels, mouse and scope sensitivity, FOV, graphics and shadow quality, camera shake, crosshair appearance, damage-number visibility, reduced motion, and the operator callsign in the existing `resonance-engine-progress` save.
 
+## Deep combat and progression systems
+
+- Movement actions now build a five-rank style chain from **Flow** through **Perfect Resonance**. Slides, slide-cancels, launch pads, piston plates, grapples, slingshot releases, zip-lines, ramp slides, aerial direction changes, and airborne eliminations extend the chain. Higher ranks accelerate ability recharge, briefly improve reload speed, award small style-credit bonuses, and persist best-combo/style totals.
+- Every weapon earns persistent cosmetic-only mastery XP from damage, eliminations, headshots, long shots, executions, and range testing. Levels unlock recorded charm, color, inspect, trail, skin, and golden-badge rewards without increasing weapon damage.
+- Selected glass, wood, data, market, factory, vent, and barricade cover has four readable damage states and dependable colliders. Heavy rifles, shotguns, explosives, and piercing weapons break it faster; destroyed cover opens real movement and shot paths while debris stays capped and short-lived.
+- Execution medals detect airborne headshots, scoped long shots, secondary finishers, post-grapple melee attacks, post-slide-cancel eliminations, shots through destroyed cover, double pierces, maximum-combo kills, final rounds, Thermal Snapshot kills, moving-platform shots, ricochets, and environmental eliminations.
+- Six elite enemies are mixed into the three arenas: Shield Carrier, Grappling Sniper, Shotgun Rusher, Invisible Scout, Medic, and Drone Operator. Each has a distinct color/silhouette, preparation cue, behavior, weakness, and higher credit value while retaining the same line-of-sight and reaction-delay fairness rules as standard enemies.
+- Each arena has illuminated limited-ammunition power-weapon stations and player-triggered environmental terminals. Pickups never overwrite the saved four-slot loadout and respawn after 30 seconds. Terminals give a one-second warning and deterministic cooldown before gravity, flood, crane, or steam effects activate.
+- Field treasure, first-time executions, mastery milestones, crate duplicates, map-page completion, factory repairs, and Factory Defense award blueprint fragments. Fragment-gated prototypes are assembled in the Factory Research screen rather than bypassed with credits.
+- The Collection Book records owned/discovered weapons, weapon mastery, executions, fragments, and twelve proximity-discovered map landmarks without revealing undiscovered secrets.
+- Factory Defense is a separate five-wave Foundry mode with storage integrity, four physical maintenance terminals, a deterministic emergency queue, repair windows, scaled enemy durability, persistent best wave, and fragment rewards. Factory emergencies and defense rules never run in normal contracts.
+
+The save key remains `resonance-engine-progress`; older saves are migrated with defaults for weapon mastery, blueprint fragments, discoveries, execution medals, and factory progress.
+
 ## Run locally
 
 ```bash
@@ -49,7 +63,7 @@ Open the URL shown by Vite and select **Enter the Engine**.
 - Mouse wheel — cycle the four equipped slots
 - `R` — reload
 - `B` — open the 97-weapon vault
-- `F` — search a nearby crate, recover a surviving gnome turret, or use a wire zip-line
+- `F` — search a nearby crate, collect a temporary power weapon, activate a map/factory terminal, recover a surviving gnome turret, or use a wire zip-line
 - `H` — toggle hostile mode
 - `M` — switch arena
 - `Shift` — sprint

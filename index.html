@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0c1115" />
     <meta name="description" content="The Resonance Engine — a first-person sniper arena with ninety-seven unlockable weapons." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23091320'/%3E%3Cpath d='M15 47V17h19c10 0 15 5 15 13 0 5-2 8-7 10l8 7H38l-7-6h-5v6H15zm11-16h8c3 0 4-1 4-3s-1-3-4-3h-8v6z' fill='%2350e5ff'/%3E%3C/svg%3E" />
     <title>The Resonance Engine</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,8 +21,10 @@
         <div class="targets"><span>RANGE STATUS</span><strong><b id="targets-left">08</b> TARGETS // <b id="enemies-left">06</b> HOSTILES</strong></div>
       </header>
 
-      <div id="crosshair" class="crosshair"><i></i><i></i><i></i><i></i><b></b></div>
+      <div id="crosshair" class="crosshair" data-profile="hip"><i></i><i></i><i></i><i></i><b></b></div>
       <div id="scope" class="scope" aria-hidden="true"><span class="scope-ring"></span><i class="scope-h"></i><i class="scope-v"></i><b>08× &nbsp; // &nbsp; HOLD BREATH</b></div>
+      <div id="aim-feedback" class="aim-feedback" aria-live="polite"><span></span><i><b></b></i></div>
+      <output id="fps-display" class="fps-display" aria-label="Frames per second">-- FPS</output>
       <div id="hitmarker" class="hitmarker"><i></i><i></i><i></i><i></i></div>
       <div id="damage-number" class="damage-number">34</div>
 
@@ -40,6 +43,15 @@
       <div id="prompt" class="prompt"></div>
       <div id="interaction" class="interaction"></div>
       <div id="status" class="status">RANGE LIVE</div>
+      <aside id="movement-combo" class="movement-combo" aria-live="polite">
+        <small>MOVEMENT CHAIN</small><strong id="combo-level">FLOW</strong><b id="combo-score">0</b>
+        <span><i id="combo-meter"></i></span><em id="combo-action">BUILD MOMENTUM</em>
+      </aside>
+      <aside id="mastery-hud" class="mastery-hud">
+        <small>WEAPON MASTERY</small><strong id="mastery-name">SPECTER CARBINE // LV 1</strong><span><i id="mastery-meter"></i></span>
+      </aside>
+      <div id="execution-feed" class="execution-feed" aria-live="polite"></div>
+      <div id="factory-objective" class="factory-objective hidden" aria-live="polite"><small>FACTORY DEFENSE</small><strong id="factory-wave">WAVE 1</strong><span id="factory-health">STORAGE 100%</span><em id="factory-emergency-hud">SYSTEMS NOMINAL</em></div>
       <div class="match-clock"><span>TIME REMAINING</span><strong id="match-clock">05:00</strong></div>
       <div class="arena-display"><span>ACTIVE ARENA</span><strong id="arena-name">THE CRUCIBLE BASIN</strong><small><kbd>M</kbd> SWITCH MAP</small></div>
       <div id="mode-display" class="mode-display peaceful"><span>COMBAT STATE</span><strong id="mode-name">PEACEFUL</strong><small><kbd>H</kbd> TOGGLE HOSTILES</small></div>
@@ -154,6 +166,7 @@
                 <button data-play-mode="quick" type="button"><i>⚡</i><span>QUICK CONTRACT<small>RANDOM MAP</small></span></button>
                 <button data-play-mode="target" type="button"><i>⌖</i><span>FIRING RANGE<small>TEST + RETURN</small></span></button>
                 <button class="active" data-play-mode="hostile" type="button"><i>✦</i><span>HOSTILE TRAINING<small>ENEMY AI ON</small></span></button>
+                <button data-play-mode="factory" type="button"><i>⚙</i><span>FACTORY DEFENSE<small>WAVES + REPAIRS</small></span></button>
                 <button data-scroll-map type="button"><i>◇</i><span>MAP VOTE<small>CHOOSE ARENA</small></span></button>
                 <button class="coming-soon" type="button" disabled><i>↗</i><span>MOVEMENT COURSE<small>COMING SOON</small></span></button>
               </div>
@@ -206,16 +219,32 @@
 
         <section id="lobby-challenges" class="lobby-panel lobby-workspace challenge-workspace" data-panel="challenges"><header><div><p>LOCAL CONTRACT BOARD // ROTATES DAILY</p><h2>CHALLENGES</h2></div><span>THREE LOCAL OBJECTIVES // NO ONLINE SERVICE REQUIRED</span></header><div class="challenge-layout"><section class="daily-contracts"><div class="section-label"><b>TODAY'S CONTRACTS</b><span id="challenge-reset">RESET // LOCAL MIDNIGHT</span></div><div id="challenge-list"></div></section><aside class="profile-panel"><div class="profile-emblem"><span>RE</span><i></i></div><small>LOCAL OPERATOR PROFILE</small><h3 id="profile-panel-callsign">ZERO SIGNAL</h3><div id="profile-stats" class="profile-stats"></div><button id="edit-callsign" type="button">EDIT CALLSIGN IN SETTINGS</button></aside></div><section class="trophy-wall-section"><div class="section-label"><b>TROPHY WALL</b><span>PERSISTENT LOCAL ACHIEVEMENTS</span></div><div id="trophy-wall" class="trophy-wall"></div></section></section>
 
+        <section id="lobby-collection" class="lobby-panel lobby-workspace collection-workspace" data-panel="collection">
+          <header><div><p>ARCHIVE // PERSISTENT DISCOVERIES</p><h2>COLLECTION BOOK</h2></div><span><b id="fragment-balance">0</b> BLUEPRINT FRAGMENTS // MASTERY IS COSMETIC</span></header>
+          <div id="collection-summary" class="collection-summary"></div>
+          <div id="collection-filters" class="collection-filters" role="group" aria-label="Collection category"><button class="active" data-collection-filter="all" type="button">ALL</button><button data-collection-filter="normal" type="button">NORMAL</button><button data-collection-filter="weird" type="button">WEIRD</button><button data-collection-filter="crazy" type="button">CRAZY</button><button data-collection-filter="custom" type="button">CUSTOM</button><button data-collection-filter="silly" type="button">SILLY</button><button data-collection-filter="primary" type="button">PRIMARY</button><button data-collection-filter="secondary" type="button">SECONDARY</button><button data-collection-filter="melee" type="button">MELEE</button><button data-collection-filter="other" type="button">OTHER</button><button data-collection-filter="gear" type="button">GEAR</button></div>
+          <div id="collection-grid" class="collection-grid"></div>
+        </section>
+
+        <section id="lobby-factory" class="lobby-panel lobby-workspace factory-workspace" data-panel="factory">
+          <header><div><p>INDUSTRIAL PARK // LOCAL OPERATIONS</p><h2>FACTORY CONTROL</h2></div><span>EMERGENCIES RUN ONLY IN FACTORY MODES</span></header>
+          <div class="factory-layout">
+            <section class="factory-console"><small>PRODUCTION STATUS</small><h3 id="factory-status">SYSTEMS NOMINAL</h3><div class="factory-gauges"><span>FACILITY LEVEL<b id="factory-level">01</b></span><span>BEST DEFENSE WAVE<b id="factory-best-wave">00</b></span><span>REPAIRS COMPLETED<b id="factory-repairs">00</b></span><span>BLUEPRINT FRAGMENTS<b id="factory-fragments">00</b></span></div><button id="factory-deploy" type="button">DEPLOY FACTORY DEFENSE →</button></section>
+            <section class="factory-emergency"><small>DETERMINISTIC MAINTENANCE QUEUE</small><h3 id="factory-emergency-name">CONVEYOR JAM</h3><p id="factory-emergency-description">Enter Factory Defense and use the marked terminal to clear the obstruction.</p><div><i id="factory-emergency-progress"></i></div><em>FAULTS CYCLE IN A FIXED ORDER. THEY NEVER APPEAR IN ORDINARY CONTRACTS.</em></section>
+            <section class="factory-research"><small>RESEARCH MACHINE</small><h3>BLUEPRINT ASSEMBLY</h3><p>Fragments come from treasure, mastery, executions, and local contracts.</p><div id="factory-research-list"></div></section>
+          </div>
+        </section>
+
         <section id="lobby-settings" class="lobby-panel lobby-workspace settings-workspace" data-panel="settings"><header><div><p>LOCAL SYSTEM // PERSISTENT</p><h2>SETTINGS</h2></div><span>AUDIO, INPUT, GRAPHICS, ACCESSIBILITY, AND CONTROLS</span></header><div class="settings-layout"><div id="settings-controls" class="settings-controls">
           <section><h3>PROFILE + AUDIO</h3><label>CALLSIGN <input id="callsign-setting" data-setting="callsign" type="text" maxlength="18" value="ZERO SIGNAL" /></label><label>MASTER VOLUME <input data-setting="masterVolume" type="range" min="0" max="1" step="0.05" /></label><label>MUSIC VOLUME <input data-setting="musicVolume" type="range" min="0" max="1" step="0.05" /></label><label>EFFECTS VOLUME <input data-setting="effectsVolume" type="range" min="0" max="1" step="0.05" /></label></section>
-          <section><h3>INPUT + VIEW</h3><label>MOUSE SENSITIVITY <input data-setting="mouseSensitivity" type="range" min="0.4" max="2" step="0.05" /></label><label>SCOPE SENSITIVITY <input data-setting="scopeSensitivity" type="range" min="0.2" max="1" step="0.05" /></label><label>FIELD OF VIEW <input data-setting="fov" type="range" min="65" max="100" step="1" /></label><label>CAMERA SHAKE <input data-setting="cameraShake" type="range" min="0" max="1" step="0.05" /></label></section>
-          <section><h3>GRAPHICS</h3><label>GRAPHICS QUALITY <select data-setting="graphicsQuality"><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label>SHADOW QUALITY <select data-setting="shadowQuality"><option value="off">OFF</option><option value="low">LOW</option><option value="high">HIGH</option></select></label><label>CROSSHAIR COLOR <input data-setting="crosshairColor" type="color" /></label><label>CROSSHAIR SIZE <input data-setting="crosshairSize" type="range" min="0.7" max="1.6" step="0.05" /></label></section>
+          <section><h3>INPUT + VIEW</h3><label>MOUSE SENSITIVITY <input data-setting="mouseSensitivity" type="range" min="0.4" max="2" step="0.05" /></label><label>SCOPE SENSITIVITY <input data-setting="scopeSensitivity" type="range" min="0.2" max="1" step="0.05" /></label><label>FIELD OF VIEW <input data-setting="fov" type="range" min="65" max="100" step="1" /></label><label>CAMERA SHAKE <input data-setting="cameraShake" type="range" min="0" max="1" step="0.05" /></label><label>ENEMY DIFFICULTY <select data-setting="enemyDifficulty"><option value="easy">EASY</option><option value="normal">NORMAL</option><option value="hard">HARD</option></select></label></section>
+          <section><h3>GRAPHICS</h3><label>GRAPHICS QUALITY <select data-setting="graphicsQuality"><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label>SHADOW QUALITY <select data-setting="shadowQuality"><option value="off">OFF</option><option value="low">LOW</option><option value="high">HIGH</option></select></label><label>CROSSHAIR COLOR <input data-setting="crosshairColor" type="color" /></label><label>CROSSHAIR SIZE <input data-setting="crosshairSize" type="range" min="0.7" max="1.6" step="0.05" /></label><label class="toggle-setting">SHOW FPS <input data-setting="showFps" type="checkbox" /></label></section>
           <section><h3>ACCESSIBILITY</h3><label class="toggle-setting">SHOW DAMAGE NUMBERS <input data-setting="showDamageNumbers" type="checkbox" /></label><label class="toggle-setting">REDUCE MOTION <input data-setting="reduceMotion" type="checkbox" /></label><button id="settings-fullscreen" type="button">TOGGLE FULLSCREEN</button><button id="reset-settings" type="button">RESET SETTINGS</button></section>
         </div><aside class="control-reference"><h3>CONTROL REFERENCE</h3><dl><div><dt>LMB</dt><dd>SHOOT // THROW // SWING // PLACE // ACTIVATE</dd></div><div><dt>RMB</dt><dd>AIM // SCOPE // PREVIEW // PREPARE</dd></div><div><dt>WASD</dt><dd>MOVE</dd></div><div><dt>SHIFT</dt><dd>SPRINT</dd></div><div><dt>C</dt><dd>SLIDE</dd></div><div><dt>SPACE</dt><dd>JUMP // SLIDE-CANCEL</dd></div><div><dt>Q / E</dt><dd>ABILITIES</dd></div><div><dt>F</dt><dd>INTERACT</dd></div><div><dt>R</dt><dd>RELOAD</dd></div><div><dt>1–4</dt><dd>WEAPON SLOTS</dd></div></dl></aside></div></section>
       </main>
 
       <nav class="lobby-nav" aria-label="Lobby navigation">
-        <button class="active" style="--tab:#baff3c" data-lobby-tab="play" type="button"><i>▶</i><span>PLAY<small>CHOOSE CONTRACT</small></span></button><button style="--tab:#ffad32" data-lobby-tab="shop" type="button"><i>◇</i><span>SHOP<small>WEAPONS + CASES</small></span></button><button style="--tab:#42d9ff" data-lobby-tab="inventory" type="button"><i>▦</i><span>INVENTORY<small>FOUR-SLOT LOADOUT</small></span></button><button style="--tab:#ff4fba" data-lobby-tab="build" type="button"><i>✦</i><span>BUILD<small>ABILITIES + PASSIVES</small></span></button><button style="--tab:#e7ff57" data-lobby-tab="challenges" type="button"><i>⌖</i><span>CHALLENGES<small>EARN BONUS CREDITS</small></span></button><button style="--tab:#e8f2ff" data-lobby-tab="settings" type="button"><i>⚙</i><span>SETTINGS<small>CONTROLS + GRAPHICS</small></span></button>
+        <button class="active" style="--tab:#baff3c" data-lobby-tab="play" type="button"><i>▶</i><span>PLAY<small>CHOOSE CONTRACT</small></span></button><button style="--tab:#ffad32" data-lobby-tab="shop" type="button"><i>◇</i><span>SHOP<small>WEAPONS + CASES</small></span></button><button style="--tab:#42d9ff" data-lobby-tab="inventory" type="button"><i>▦</i><span>INVENTORY<small>FOUR-SLOT LOADOUT</small></span></button><button style="--tab:#ff4fba" data-lobby-tab="build" type="button"><i>✦</i><span>BUILD<small>ABILITIES + PASSIVES</small></span></button><button style="--tab:#e7ff57" data-lobby-tab="challenges" type="button"><i>⌖</i><span>CHALLENGES<small>EARN BONUS CREDITS</small></span></button><button style="--tab:#ffc857" data-lobby-tab="collection" type="button"><i>▤</i><span>COLLECTION<small>MASTERY + BLUEPRINTS</small></span></button><button style="--tab:#ff7043" data-lobby-tab="factory" type="button"><i>⚙</i><span>FACTORY<small>RESEARCH + DEFENSE</small></span></button><button style="--tab:#e8f2ff" data-lobby-tab="settings" type="button"><i>⌁</i><span>SETTINGS<small>CONTROLS + GRAPHICS</small></span></button>
       </nav>
       <div id="lobby-notifications" class="lobby-notifications" aria-live="polite"></div>
     </section>
