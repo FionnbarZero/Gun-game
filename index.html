@@ -12,7 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <canvas id="game" aria-label="The Resonance Engine 3D sniper game"></canvas>
+    <canvas id="game" tabindex="0" aria-label="The Resonance Engine 3D sniper game. Click to capture the mouse and look around."></canvas>
+    <button id="mouse-lock-gate" class="mouse-lock-gate hidden" type="button" aria-label="Capture mouse and start looking around"><span>CLICK TO CONTROL</span><strong>CAPTURE MOUSE + LOOK AROUND</strong><small>MOVE MOUSE TO TURN // ESC RELEASES</small></button>
 
     <div id="hud" class="hidden" aria-hidden="true">
       <header class="topbar">
@@ -40,7 +41,7 @@
         <div class="radar-legend"><span><i></i> TARGET <i class="enemy-key"></i> HOSTILE</span><span>N ↑</span></div>
       </aside>
 
-      <div id="prompt" class="prompt"></div>
+      <div id="prompt" class="prompt" role="button" tabindex="0" aria-label="Capture mouse and look around"></div>
       <div id="interaction" class="interaction"></div>
       <div id="status" class="status">RANGE LIVE</div>
       <aside id="movement-combo" class="movement-combo" aria-live="polite">
@@ -62,6 +63,19 @@
         <div><span>DISTANCE <b id="range-distance-label">60M</b></span><button data-range-distance="25" type="button">25M</button><button class="active" data-range-distance="60" type="button">60M</button><button data-range-distance="100" type="button">100M</button></div>
         <div><button id="range-moving-targets" type="button">MOVING TARGETS // OFF</button><button id="range-reset-stats" type="button">RESET TEST</button></div>
         <footer><span>ACCURACY <b id="range-accuracy">0%</b></span><span>ELIMS <b id="range-eliminations">0</b></span><span>LAST CLEAR <b id="range-clear-time">—</b></span></footer>
+      </aside>
+
+      <aside id="lobby-parkour-panel" class="lobby-parkour-panel hidden" aria-label="Chill Deck parkour controls">
+        <header><span>LOBBY CHILL DECK</span><button id="exit-lobby-parkour" type="button">RETURN TO LOBBY</button></header>
+        <div><strong>EASY PARKOUR RUN</strong><span>JUMP THE GAPS // HOLD <kbd>SPACE</kbd> INTO THE GLOWING WALL TO VAULT</span></div>
+        <footer><span>RUN <b id="parkour-run-time">0.00S</b></span><span>BEST <b id="parkour-best-time">—</b></span><span>REWARD <b>◆75</b><small> // ◆20 QUICK REPEAT</small></span><button id="restart-lobby-parkour" type="button">RESTART RUN</button></footer>
+      </aside>
+
+      <aside id="parkour-panel" class="parkour-panel hidden" aria-label="Parkour trial status">
+        <header><span>PARKOUR TRIAL // <b id="parkour-course-name">NEON VELOCITY</b></span><button id="exit-parkour" type="button">RETURN TO LOBBY</button></header>
+        <div class="parkour-progress"><i id="parkour-progress-bar"></i></div>
+        <div class="parkour-readout"><span>CHECKPOINT <b id="parkour-checkpoint">0 / 6</b></span><span>RUN TIME <b id="parkour-time">00.00</b></span><span>BEST <b id="parkour-best">—</b></span><span>MEDAL PACE <b id="parkour-pace">GOLD</b></span></div>
+        <footer><span>FOLLOW THE BRIGHT GATE</span><span>FALLS RESET TO YOUR LAST CHECKPOINT +3S</span><button id="reset-parkour" type="button">RESTART RUN</button></footer>
       </aside>
 
       <footer class="bottom-hud">
@@ -121,7 +135,7 @@
     </section>
 
     <section id="menu" class="menu resonance-lobby" data-active-panel="play">
-      <div class="lobby-backdrop" aria-hidden="true"><i></i><i></i><i></i><span></span><b></b></div>
+      <div class="lobby-backdrop" aria-hidden="true"><i></i><i></i><i></i><span></span><b></b><div class="lobby-horizon"><i class="horizon-sun"></i><i class="ridge ridge-far"></i><i class="ridge ridge-near"></i><i class="skyline"></i><i class="promenade"></i></div></div>
       <div class="grain"></div><div class="menu-grid"></div>
       <div id="resonance-reactor" class="resonance-reactor" aria-hidden="true"><i></i><i></i><i></i><b>RE</b></div>
 
@@ -161,14 +175,15 @@
 
             <aside class="play-command">
               <div class="command-kicker"><span>CONTRACT READY</span><b id="loadout-ready">4/4 LOADOUT ONLINE</b></div>
-              <button id="deploy" type="button"><small>SELECTED // <b id="deploy-map-name">VERTIGO GRID</b></small><span>ENTER THE ENGINE</span><em>DEPLOY →</em></button>
+              <button id="deploy" type="button"><small>SELECTED // <b id="deploy-map-name">VERTIGO GRID</b></small><span>PLAY</span><em>START MAIN GAME →</em></button>
               <div class="play-options" role="group" aria-label="Play options">
-                <button data-play-mode="quick" type="button"><i>⚡</i><span>QUICK CONTRACT<small>RANDOM MAP</small></span></button>
+                <button data-match-route="main" type="button"><i>⚡</i><span>MAIN GAME<small>10 SECOND MAP VOTE</small></span></button>
                 <button data-play-mode="target" type="button"><i>⌖</i><span>FIRING RANGE<small>TEST + RETURN</small></span></button>
-                <button class="active" data-play-mode="hostile" type="button"><i>✦</i><span>HOSTILE TRAINING<small>ENEMY AI ON</small></span></button>
+                <button class="chill-option" data-play-mode="parkour" type="button"><i>↟</i><span>CHILL DECK<small>EASY PARKOUR // EARN ◆75</small></span></button>
+                <button class="active" data-match-route="duels" type="button"><i>✦</i><span>DUELS<small>1V1 // 2V2 // 3V3 // 4V4</small></span></button>
                 <button data-play-mode="factory" type="button"><i>⚙</i><span>FACTORY DEFENSE<small>WAVES + REPAIRS</small></span></button>
+                <button data-match-route="parkour" type="button"><i>↟</i><span>PARKOUR TRIALS<small>3 COURSES // TIME ATTACK</small></span></button>
                 <button data-scroll-map type="button"><i>◇</i><span>MAP VOTE<small>CHOOSE ARENA</small></span></button>
-                <button class="coming-soon" type="button" disabled><i>↗</i><span>MOVEMENT COURSE<small>COMING SOON</small></span></button>
               </div>
               <article class="featured-weapon" id="featured-weapon-panel">
                 <header><span>FEATURED BLUEPRINT</span><div><button id="featured-prev" type="button" aria-label="Previous featured weapon">‹</button><button id="featured-next" type="button" aria-label="Next featured weapon">›</button></div></header>
@@ -179,6 +194,34 @@
             </aside>
           </div>
 
+          <section id="play-route-modal" class="play-route-modal hidden" aria-hidden="true" aria-label="Choose play mode">
+            <div class="play-route-shell">
+              <header><div><small>RESONANCE MATCH CONTROL</small><h2>CHOOSE HOW TO PLAY</h2></div><button id="play-route-close" type="button" aria-label="Close mode selection">×</button></header>
+              <div id="play-route-overview">
+                <div class="primary-routes">
+                  <button class="route-card main-route" data-match-route="main" type="button"><i>01</i><small>NORMAL PLAY</small><strong>MAIN GAME</strong><span>Vote for an arena for 10 seconds, then deploy into the full combat match.</span><em>START MAP VOTE →</em></button>
+                  <button class="route-card duel-route-card" data-match-route="duels" type="button"><i>02</i><small>TEAM COMBAT</small><strong>DUELS</strong><span>Choose 1V1, 2V2, 3V3, or 4V4. Team matchmaking is the next gameplay phase.</span><em>CHOOSE TEAM SIZE →</em></button>
+                  <button class="route-card parkour-route-card" data-match-route="parkour" type="button"><i>03</i><small>MOVEMENT TIME ATTACK</small><strong>PARKOUR TRIALS</strong><span>Race three handcrafted routes with checkpoints, fall recovery, medals, and saved best times.</span><em>CHOOSE A COURSE →</em></button>
+                </div>
+                <div class="minigame-preview"><header><b>MINI GAMES</b><span>FOUR MODES RESERVED FOR A LATER UPDATE</span></header><div><article><i>⌁</i><b>SIGNAL RUSH</b><small>COMING LATER</small></article><article><i>◇</i><b>CORE RELAY</b><small>COMING LATER</small></article><article><i>↟</i><b>LOW GRAVITY</b><small>COMING LATER</small></article><article><i>⌖</i><b>TARGET STORM</b><small>COMING LATER</small></article></div></div>
+              </div>
+              <div id="duel-route" class="duel-route hidden">
+                <button id="duel-route-back" type="button">← ALL MODES</button><small>DUELS // SELECT TEAM SIZE</small><h3>CHOOSE YOUR FIGHT</h3>
+                <div><button class="selected" data-duel-size="1" type="button"><b>1V1</b><span>PRIVATE ONLINE<br />LIVE NOW</span></button><button data-duel-size="2" type="button"><b>2V2</b><span>TWO-PLAYER<br />FIRETEAMS</span></button><button data-duel-size="3" type="button"><b>3V3</b><span>TACTICAL<br />SQUADS</span></button><button data-duel-size="4" type="button"><b>4V4</b><span>FULL TEAM<br />ENGAGEMENT</span></button></div>
+                <section id="private-match-panel" class="private-match-panel">
+                  <header><div><small>AUTHORITATIVE SERVER</small><strong>PRIVATE 1V1</strong></div><span id="multiplayer-connection-light">OFFLINE</span></header>
+                  <label>OPERATOR NAME<input id="multiplayer-name" maxlength="18" autocomplete="nickname" placeholder="OPERATOR" /></label>
+                  <div class="private-match-actions"><button id="create-private-match" type="button">CREATE ROOM</button><span>OR</span><label>ROOM CODE<input id="private-room-code" maxlength="5" autocomplete="off" spellcheck="false" placeholder="A7K9Q" /></label><button id="join-private-match" type="button">JOIN ROOM</button></div>
+                  <div id="private-room-result" class="private-room-result hidden"><small>YOUR ROOM CODE</small><strong id="private-room-code-display">-----</strong><button id="copy-private-room-code" type="button">COPY</button></div>
+                  <p id="multiplayer-status" role="status">START THE MULTIPLAYER SERVER, THEN CREATE A ROOM OR JOIN A FRIEND.</p>
+                  <button id="cancel-private-match" class="cancel-private-match hidden" type="button">LEAVE ONLINE ROOM</button>
+                </section>
+                <p>1V1 PRIVATE ROOMS ARE PLAYABLE. 2V2–4V4 STAY LOCKED UNTIL THE TWO-PLAYER NETCODE IS PROVEN.</p>
+              </div>
+              <div id="parkour-route" class="parkour-route hidden"><button id="parkour-route-back" type="button">← ALL MODES</button><small>LOBBY PARKOUR // SELECT A VARIANT</small><h3>CHOOSE YOUR RUN</h3><div class="parkour-course-grid"><button class="selected" data-parkour-course="0" type="button"><i>01</i><b>NEON VELOCITY</b><span>VERTIGO GRID<br />FLOW COURSE</span><em>GOLD // 29S</em></button><button data-parkour-course="1" type="button"><i>02</i><b>CANOPY CIRCUIT</b><span>OVERGROWN OUTPOST<br />TECHNICAL COURSE</span><em>GOLD // 34S</em></button><button data-parkour-course="2" type="button"><i>03</i><b>FOUNDRY RUSH</b><span>INDUSTRIAL FOUNDRY<br />EXTREME COURSE</span><em>GOLD // 31S</em></button></div><article id="parkour-course-intel"><small>FLOW // 6 CHECKPOINTS</small><strong>NEON VELOCITY</strong><p>Race up a glowing Spine, cross the glass bridge, and finish on the Center Spire.</p><span>BEST TIME // <b>—</b></span></article><button id="start-parkour" class="start-parkour" type="button">START PARKOUR TRIAL →</button></div>
+            </div>
+          </section>
+
           <div class="lobby-summary-row">
             <section class="live-loadout"><header><span>LIVE LOADOUT</span><small>CLICK A SLOT TO EDIT</small></header><div id="lobby-live-loadout"></div></section>
             <button id="lobby-build-summary" class="build-summary" type="button"><header><span>ATTUNEMENT BUILD</span><small>OPEN BUILD →</small></header><div id="lobby-ability-summary"></div><div id="lobby-passive-summary"></div></button>
@@ -188,12 +231,12 @@
           <section id="map-vote-section" class="map-vote-section">
             <div class="map-vote-head"><div><p class="eyebrow">ARENA CONTROL // NEXT CONTRACT</p><h2>MAP <em>VOTE</em></h2></div><div class="vote-mode"><small>CURRENT RULESET</small><b>SOLO SNIPER CONTRACT</b><span>5:00 // LOCAL SIMULATION</span></div></div>
             <div class="map-select" role="group" aria-label="Choose arena">
-              <button class="map-option active" data-map="0" type="button"><span class="map-thumb vertigo"><i></i><i></i><i></i></span><span class="map-card-copy"><small>01 // SYNTHWAVE SKYLINE</small><b>VERTIGO GRID</b><em>NEON GLASS // VERTICAL</em><em>REC: SLEDGE BOLT-ACTION</em><strong>SHOCK MINE // KINETIC SLINGSHOT</strong></span><span class="vote-action">VOTE <b data-vote-count="0">3</b></span></button>
-              <button class="map-option" data-map="1" type="button"><span class="map-thumb outpost"><i></i><i></i><i></i></span><span class="map-card-copy"><small>02 // RECLAIMED RESEARCH SITE</small><b>OVERGROWN OUTPOST</b><em>RUINED JUNGLE // STEALTHY</em><em>REC: HELIX DMR</em><strong>GRAVITY BOMB // THERMAL SNAPSHOT</strong></span><span class="vote-action">VOTE <b data-vote-count="1">1</b></span></button>
-              <button class="map-option" data-map="2" type="button"><span class="map-thumb foundry"><i></i><i></i><i></i></span><span class="map-card-copy"><small>03 // ACTIVE INDUSTRIAL FLOOR</small><b>INDUSTRIAL FOUNDRY</b><em>MECHANICAL // CHOKE-POINT</em><em>REC: BROADSIDE SHOTGUN</em><strong>FRAG BOMB // REPULSION NOVA</strong></span><span class="vote-action">VOTE <b data-vote-count="2">2</b></span></button>
+              <button class="map-option active" data-map="0" type="button"><span class="map-thumb vertigo"><i></i><i></i><i></i></span><span class="map-card-copy"><small>01 // SYNTHWAVE SKYLINE</small><b>VERTIGO GRID</b><em>NEON GLASS // VERTICAL</em><em>REC: SLEDGE BOLT-ACTION</em><strong>SHOCK MINE // KINETIC SLINGSHOT</strong></span><span class="vote-action">YOUR VOTE <b data-vote-count="0">1</b></span></button>
+              <button class="map-option" data-map="1" type="button"><span class="map-thumb outpost"><i></i><i></i><i></i></span><span class="map-card-copy"><small>02 // RECLAIMED RESEARCH SITE</small><b>OVERGROWN OUTPOST</b><em>RUINED JUNGLE // STEALTHY</em><em>REC: HELIX DMR</em><strong>GRAVITY BOMB // THERMAL SNAPSHOT</strong></span><span class="vote-action">YOUR VOTE <b data-vote-count="1">0</b></span></button>
+              <button class="map-option" data-map="2" type="button"><span class="map-thumb foundry"><i></i><i></i><i></i></span><span class="map-card-copy"><small>03 // ACTIVE INDUSTRIAL FLOOR</small><b>INDUSTRIAL FOUNDRY</b><em>MECHANICAL // CHOKE-POINT</em><em>REC: BROADSIDE SHOTGUN</em><strong>FRAG BOMB // REPULSION NOVA</strong></span><span class="vote-action">YOUR VOTE <b data-vote-count="2">0</b></span></button>
               <article class="future-map-card" aria-disabled="true"><span>ENCRYPTED ARENA</span><b>PRISM GLACIER</b><small>EXPANSION ROUTE // COMING SOON</small><i>⌁</i></article>
             </div>
-            <div class="map-vote-foot"><div class="map-intel"><small>RECOMMENDED OTHER</small><b id="map-utility">SHOCK MINE</b><span id="map-intel">Lock down rooftop launch exits while watching the glowing bridge lanes.</span></div><button id="toggle-map-hologram" class="hologram-toggle" type="button">◇ MAP HOLOGRAM</button><div class="vote-timer"><small>NEXT TALLY</small><b><span id="map-vote-timer">08</span>S</b></div></div>
+            <div class="map-vote-foot"><div class="map-intel"><small>RECOMMENDED OTHER</small><b id="map-utility">SHOCK MINE</b><span id="map-intel">Lock down rooftop launch exits while watching the glowing bridge lanes.</span></div><button id="toggle-map-hologram" class="hologram-toggle" type="button">◇ MAP HOLOGRAM</button><div class="vote-timer"><small id="map-vote-label">PLAY TO BEGIN VOTE</small><b><span id="map-vote-timer">10</span>S</b></div></div>
             <section id="map-hologram-table" class="map-hologram-table" aria-label="Interactive map hologram"><div id="hologram-diorama" class="hologram-diorama"><i class="holo-base"></i><i class="holo-route route-a"></i><i class="holo-route route-b"></i><span class="holo-landmark landmark-a"></span><span class="holo-landmark landmark-b"></span><span class="holo-landmark landmark-c"></span></div><div><small>TACTICAL HOLOGRAM // DRAG TO ROTATE</small><h3 id="hologram-map-name">VERTIGO GRID</h3><p id="hologram-map-style">SYNTHWAVE // VERTICAL CONTROL</p><ul id="hologram-landmarks"></ul><em>UNMAPPED SIGNALS REMAIN HIDDEN UNTIL DISCOVERED.</em></div></section>
           </section>
         </section>
@@ -238,7 +281,7 @@
         <section id="lobby-settings" class="lobby-panel lobby-workspace settings-workspace" data-panel="settings"><header><div><p>LOCAL SYSTEM // PERSISTENT</p><h2>SETTINGS</h2></div><span>AUDIO, INPUT, GRAPHICS, ACCESSIBILITY, AND CONTROLS</span></header><div class="settings-layout"><div id="settings-controls" class="settings-controls">
           <section><h3>PROFILE + AUDIO</h3><label>CALLSIGN <input id="callsign-setting" data-setting="callsign" type="text" maxlength="18" value="ZERO SIGNAL" /></label><label>MASTER VOLUME <input data-setting="masterVolume" type="range" min="0" max="1" step="0.05" /></label><label>MUSIC VOLUME <input data-setting="musicVolume" type="range" min="0" max="1" step="0.05" /></label><label>EFFECTS VOLUME <input data-setting="effectsVolume" type="range" min="0" max="1" step="0.05" /></label></section>
           <section><h3>INPUT + VIEW</h3><label>MOUSE SENSITIVITY <input data-setting="mouseSensitivity" type="range" min="0.4" max="2" step="0.05" /></label><label>SCOPE SENSITIVITY <input data-setting="scopeSensitivity" type="range" min="0.2" max="1" step="0.05" /></label><label>FIELD OF VIEW <input data-setting="fov" type="range" min="65" max="100" step="1" /></label><label>CAMERA SHAKE <input data-setting="cameraShake" type="range" min="0" max="1" step="0.05" /></label><label>ENEMY DIFFICULTY <select data-setting="enemyDifficulty"><option value="easy">EASY</option><option value="normal">NORMAL</option><option value="hard">HARD</option></select></label></section>
-          <section><h3>GRAPHICS</h3><label>GRAPHICS QUALITY <select data-setting="graphicsQuality"><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option></select></label><label>SHADOW QUALITY <select data-setting="shadowQuality"><option value="off">OFF</option><option value="low">LOW</option><option value="high">HIGH</option></select></label><label>CROSSHAIR COLOR <input data-setting="crosshairColor" type="color" /></label><label>CROSSHAIR SIZE <input data-setting="crosshairSize" type="range" min="0.7" max="1.6" step="0.05" /></label><label class="toggle-setting">SHOW FPS <input data-setting="showFps" type="checkbox" /></label></section>
+          <section><h3>GRAPHICS</h3><label>GRAPHICS QUALITY <select data-setting="graphicsQuality"><option value="low">LOW</option><option value="medium">MEDIUM</option><option value="high">HIGH</option><option value="ultra">ULTRA</option></select></label><label>SHADOW QUALITY <select data-setting="shadowQuality"><option value="off">OFF</option><option value="low">LOW</option><option value="high">HIGH</option><option value="ultra">ULTRA</option></select></label><label class="toggle-setting">RESTRAINED BLOOM <input data-setting="bloom" type="checkbox" /></label><label class="toggle-setting">ADAPTIVE QUALITY <input data-setting="adaptiveQuality" type="checkbox" /></label><label>CROSSHAIR COLOR <input data-setting="crosshairColor" type="color" /></label><label>CROSSHAIR SIZE <input data-setting="crosshairSize" type="range" min="0.7" max="1.6" step="0.05" /></label><label class="toggle-setting">SHOW FPS <input data-setting="showFps" type="checkbox" /></label></section>
           <section><h3>ACCESSIBILITY</h3><label class="toggle-setting">SHOW DAMAGE NUMBERS <input data-setting="showDamageNumbers" type="checkbox" /></label><label class="toggle-setting">REDUCE MOTION <input data-setting="reduceMotion" type="checkbox" /></label><button id="settings-fullscreen" type="button">TOGGLE FULLSCREEN</button><button id="reset-settings" type="button">RESET SETTINGS</button></section>
         </div><aside class="control-reference"><h3>CONTROL REFERENCE</h3><dl><div><dt>LMB</dt><dd>SHOOT // THROW // SWING // PLACE // ACTIVATE</dd></div><div><dt>RMB</dt><dd>AIM // SCOPE // PREVIEW // PREPARE</dd></div><div><dt>WASD</dt><dd>MOVE</dd></div><div><dt>SHIFT</dt><dd>SPRINT</dd></div><div><dt>C</dt><dd>SLIDE</dd></div><div><dt>SPACE</dt><dd>JUMP // SLIDE-CANCEL</dd></div><div><dt>Q / E</dt><dd>ABILITIES</dd></div><div><dt>F</dt><dd>INTERACT</dd></div><div><dt>R</dt><dd>RELOAD</dd></div><div><dt>1–4</dt><dd>WEAPON SLOTS</dd></div></dl></aside></div></section>
       </main>
@@ -269,8 +312,9 @@
     <section id="complete" class="complete hidden">
       <p>EXERCISE COMPLETE</p>
       <h2 id="complete-title">RANGE<br />CLEARED</h2>
-      <div><span>ACCURACY <b id="accuracy">100%</b></span><span>ROUNDS <b id="rounds">0</b></span></div>
+      <div><span><em id="complete-stat-one-label">ACCURACY</em> <b id="accuracy">100%</b></span><span><em id="complete-stat-two-label">ROUNDS</em> <b id="rounds">0</b></span></div>
       <button id="restart" type="button">RUN IT AGAIN <b>↻</b></button>
+      <button id="complete-return-lobby" class="hidden" type="button">RETURN TO LOBBY <b>←</b></button>
     </section>
 
     <section id="death" class="death hidden">
