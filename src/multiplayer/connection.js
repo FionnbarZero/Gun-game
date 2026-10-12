@@ -3,6 +3,7 @@ import { Predict } from '@colyseus/sdk/predict';
 import { normalizeNetworkName, normalizeRoomCode, stepNetworkPlayer } from '../../shared/network-config.js';
 
 function defaultEndpoint() {
+  if (import.meta.env.VITE_MULTIPLAYER_URL) return import.meta.env.VITE_MULTIPLAYER_URL;
   if (import.meta.env.VITE_COLYSEUS_URL) return import.meta.env.VITE_COLYSEUS_URL;
   return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`;
 }
@@ -95,12 +96,15 @@ export class OnlineMatchClient {
         vx:this.predict.value(player, 'vx'), vy:this.predict.value(player, 'vy'), vz:this.predict.value(player, 'vz'),
         yaw:this.predict.value(player, 'yaw'), pitch:this.predict.value(player, 'pitch'),
         health:player.health, shield:player.shield, alive:player.alive, onGround:player.onGround, connected:player.connected,
+        aiming:player.aiming, animationState:player.animationState, movementSpeed:player.movementSpeed,
+        activeSlot:player.activeSlot, weaponId:player.weaponId, spawnProtectedUntil:player.spawnProtectedUntil,
         ammo:player.ammo, reserve:player.reserve, reloading:player.reloading,
         kills:player.kills, deaths:player.deaths, respawnAt:player.respawnAt,
       });
     }
     return {
-      phase:state.phase, countdownEndsAt:state.countdownEndsAt, matchEndsAt:state.matchEndsAt,
+      phase:state.phase, mapId:state.mapId, countdownEndsAt:state.countdownEndsAt, matchEndsAt:state.matchEndsAt,
+      winningScore:state.winningScore,
       winnerSessionId:state.winnerSessionId, selfSessionId:this.room.sessionId, players,
     };
   }

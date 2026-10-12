@@ -10,6 +10,8 @@
     "test:multiplayer": "node --import tsx --test tests/multiplayer/**/*.test.ts",
     "multiplayer:smoke": "node tests/multiplayer/browser-smoke.mjs",
     "visual:smoke": "node scripts/visual-smoke.mjs",
+    "visual:realism": "node scripts/realism-visual-smoke.mjs",
+    "visual:hub": "node scripts/hub-visual-smoke.mjs",
     "build": "vite build",
     "build:multiplayer": "vite build --config vite.multiplayer.config.ts",
     "start:multiplayer": "node dist/server/server.mjs",

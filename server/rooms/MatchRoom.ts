@@ -4,13 +4,18 @@ import {
   NETWORK_COUNTDOWN_MS,
   NETWORK_MATCH_SECONDS,
   NETWORK_PATCH_RATE_MS,
+  NETWORK_RECONNECT_SECONDS,
   NETWORK_RESPAWN_MS,
+  NETWORK_SPAWN_PROTECTION_MS,
   NETWORK_SPAWNS,
   NETWORK_TICK_RATE,
   NETWORK_WEAPONS,
+  NETWORK_WINNING_SCORE,
+  networkRayObstacleDistance,
   normalizeDirection,
   normalizeNetworkName,
   raySphereDistance,
+  resolveNetworkPlayerOverlaps,
   stepNetworkPlayer,
   viewDirectionFromAngles,
 } from '../../shared/network-config.js';
@@ -25,12 +30,12 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
   patchRate = NETWORK_PATCH_RATE_MS;
   state = new MatchState({
     phase: 'waiting', mapId: 'vertigo-grid', countdownEndsAt: 0,
-    matchEndsAt: 0, winnerSessionId: '',
+    matchEndsAt: 0, winnerSessionId: '', winningScore: NETWORK_WINNING_SCORE,
   });
   inputs = this.defineInput(MatchInput, {
     bufferMaxSize: 64,
     sanitize: {
-      moveX: [-1, 1], moveZ: [-1, 1], flags: [0, 7],
+      moveX: [-1, 1], moveZ: [-1, 1], flags: [0, 15],
       yaw: [-Math.PI, Math.PI], pitch: [-1.5, 1.5],
     },
   });
@@ -39,6 +44,7 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
   private spawnOrder = new Map<string, number>();
   private nextSpawnIndex = 0;
   private countdownGeneration = 0;
+  private nextEliminationId = 0;
 
   messages = {
     fire: (client: Client, payload: any) => this.handleFire(client, payload),
@@ -60,17 +66,18 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
       x: spawn.x, y: spawn.y, z: spawn.z,
       vx: 0, vy: 0, vz: 0, yaw: spawn.yaw, pitch: 0,
       health: 100, shield: 50, alive: true, onGround: true, connected: true, reloading: false,
+      aiming: false, animationState: 'idle', movementSpeed: 0, activeSlot: 0,
       ammo: weapon.magazine, reserve: weapon.reserve, kills: 0, deaths: 0,
-      weaponId: weapon.id, reloadEndsAt: 0, respawnAt: 0,
+      weaponId: weapon.id, reloadEndsAt: 0, respawnAt: 0, spawnProtectedUntil: Date.now() + NETWORK_SPAWN_PROTECTION_MS,
     }));
-    client.send('room-info', { roomCode:this.roomId, mapId:this.state.mapId, authority:'server' });
     if (this.clients.length === this.maxClients) this.startCountdown();
   }
 
-  onDrop(client: Client, _code: CloseCode) {
+  async onDrop(client: Client, _code: CloseCode) {
     const player = this.state.players.get(client.sessionId);
     if (player) player.connected = false;
-    this.allowReconnection(client, 20).catch(() => {});
+    try { await this.allowReconnection(client, NETWORK_RECONNECT_SECONDS); }
+    catch { /* onLeave performs the final cleanup after the grace window. */ }
   }
 
   onReconnect(client: Client) {
@@ -87,7 +94,7 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
       this.state.phase = 'waiting';
       this.state.countdownEndsAt = 0;
       this.state.matchEndsAt = 0;
-      for (const player of this.state.players.values()) this.resetPlayer(player, 0);
+      for (const player of this.state.players.values()) this.resetPlayer(player, 0, true);
     }
   }
 
@@ -109,6 +116,9 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
 
   private startCountdown() {
     const generation = ++this.countdownGeneration;
+    let spawnIndex = 0;
+    for (const player of this.state.players.values()) this.resetPlayer(player, spawnIndex++, true);
+    this.state.winnerSessionId = '';
     this.state.phase = 'countdown';
     this.state.countdownEndsAt = Date.now() + NETWORK_COUNTDOWN_MS;
     this.clock.setTimeout(() => {
@@ -138,6 +148,7 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
       for (const input of channel) newestInput = input;
       if (newestInput) stepNetworkPlayer(player, newestInput, ctx.dt);
     }
+    if(this.state.phase==='playing')resolveNetworkPlayerOverlaps([...this.state.players.values()]);
   }
 
   private handleFire(client: Client, payload: any) {
@@ -155,13 +166,14 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
     this.lastShotAt.set(client.sessionId, now);
     shooter.ammo--;
     const origin = { x:shooter.x, y:shooter.y - .08, z:shooter.z };
+    const obstacleDistance=networkRayObstacleDistance(origin,direction,weapon.range);
     let hit: { sessionId:string, distance:number, headshot:boolean } | null = null;
     for (const [sessionId, target] of this.state.players) {
-      if (sessionId === client.sessionId || !target.alive) continue;
+      if (sessionId === client.sessionId || !target.alive || !target.connected || now < target.spawnProtectedUntil) continue;
       const headDistance = raySphereDistance(origin, direction, { x:target.x, y:target.y, z:target.z }, .36, weapon.range);
       const bodyDistance = raySphereDistance(origin, direction, { x:target.x, y:target.y - .82, z:target.z }, .72, weapon.range);
       const distance = headDistance ?? bodyDistance;
-      if (distance !== null && (!hit || distance < hit.distance)) hit = { sessionId, distance, headshot:headDistance !== null };
+      if (distance !== null && distance<obstacleDistance && (!hit || distance < hit.distance)) hit = { sessionId, distance, headshot:headDistance !== null };
     }
 
     if (hit) {
@@ -184,17 +196,26 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
     target.health = Math.max(0, target.health - remaining);
     if (target.health > 0) return;
     target.alive = false;
+    target.animationState = 'defeated';
+    target.reloading = false;
+    target.reloadEndsAt = 0;
     target.deaths++;
     target.respawnAt = Date.now() + NETWORK_RESPAWN_MS;
     const shooter = this.state.players.get(shooterSessionId);
     if (shooter) shooter.kills++;
-    this.broadcast('elimination', { shooterSessionId, targetName:target.name, respawnAt:target.respawnAt });
+    this.broadcast('elimination', {
+      eliminationId:++this.nextEliminationId, shooterSessionId,
+      targetSessionId:[...this.state.players].find(([, player]) => player === target)?.[0] ?? '',
+      targetName:target.name, respawnAt:target.respawnAt,
+    });
+    if (shooter && shooter.kills >= this.state.winningScore) this.finishMatch('score_limit');
   }
 
   private handleReload(client: Client) {
     const player = this.state.players.get(client.sessionId);
     if (!player || !player.alive || player.reloading || player.ammo >= weapon.magazine || player.reserve <= 0) return;
     player.reloading = true;
+    player.animationState = 'reload';
     player.reloadEndsAt = Date.now() + weapon.reloadMs;
     this.clock.setTimeout(() => {
       if (!player.reloading || !this.state.players.has(client.sessionId)) return;
@@ -206,16 +227,18 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
     }, weapon.reloadMs);
   }
 
-  private resetPlayer(player: PlayerState, spawnIndex: number) {
+  private resetPlayer(player: PlayerState, spawnIndex: number, resetScore = false) {
     const spawn = NETWORK_SPAWNS[spawnIndex % NETWORK_SPAWNS.length];
     player.x = spawn.x; player.y = spawn.y; player.z = spawn.z;
     player.vx = 0; player.vy = 0; player.vz = 0; player.yaw = spawn.yaw; player.pitch = 0;
     player.health = 100; player.shield = 50; player.alive = true; player.onGround = true;
-    player.reloading = false; player.ammo = weapon.magazine; player.reserve = weapon.reserve;
-    player.reloadEndsAt = 0; player.respawnAt = 0;
+    player.reloading = false; player.aiming = false; player.animationState = 'idle'; player.movementSpeed = 0;
+    player.ammo = weapon.magazine; player.reserve = weapon.reserve;
+    player.reloadEndsAt = 0; player.respawnAt = 0; player.spawnProtectedUntil = Date.now() + NETWORK_SPAWN_PROTECTION_MS;
+    if (resetScore) { player.kills = 0; player.deaths = 0; }
   }
 
-  private finishMatch() {
+  private finishMatch(reason = 'time_limit') {
     if (this.state.phase === 'ended') return;
     this.state.phase = 'ended';
     this.state.matchEndsAt = 0;
@@ -226,6 +249,9 @@ export class MatchRoom extends Room<{ state: MatchState, input: MatchInput }> {
       else if (player.kills === highScore) winner = '';
     }
     this.state.winnerSessionId = winner;
-    this.broadcast('match-end', { winnerSessionId:winner });
+    this.broadcast('match-end', {
+      winnerSessionId:winner, reason,
+      scores:[...this.state.players].map(([sessionId, player]) => ({ sessionId, kills:player.kills, deaths:player.deaths })),
+    });
   }
 }
